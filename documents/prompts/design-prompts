@@ -1,0 +1,42 @@
+Initial file directory prompt (Christian):
+
+Help me plan out the file directory real quick. I am making an app that is supposed to be a business manager app. This is the following pertinent info:
+
+Manager Role
+Has access to the following pages:
+Active/Past Orders (separate pages)
+Active Orders shows orders that need to be completed (regular invoice format, populated by Customers, marking as completed should let the customer know it is done and upon paying, should put the completed invoice in Past Orders page) 
+Past Orders holds completed invoices, only seen by the Manager
+Manager & employees should be allowed to manually create an invoice (in the event that a customer has called/didnt use the app interface to put in an order) 
+Employees
+Each card element is one employee, should be a table of days of the week, and should nicely display the hours worked. Hours worked can be submitted by Employees, and hours must be approved by a Manager
+Should display the amount made (so far) for the week. Timesheets should be reset automatically at the end of the week (or when employees are paid, there should be functionality to be able to mark that some has been paid)
+Ability to add/remove employees and to set their pay
+Customers
+Each card is one customer
+Each card should display the total spent per day and per week
+In settings (or in a sub-page of this page), you should be able to see all-time totals per customer
+Should somehow display that an order(s) is active 
+Should be able to filter individual and business customers
+Inventory
+Custom inventory items, there should be set categories of what kind of item it is (beef, poultry, etc) with the categories also having the ability to be custom, inventory items can be selected by customers
+Inventory counts should be automatically updated as orders are paid for
+Manager should be able to update inventory counts if new inventory has been purchased
+Employee Role
+Has the following pages:
+Read-only access to Active Orders and Inventory pages
+Clock in-Out
+Displays calendar where employees can input hours for any given day per week (resets weekly/once an employee is paid/end of pay period)
+Timesheet must be approved by a Manager 
+Customer Role
+Two Types of sub-roles:
+Individual Customer
+Landing page is read-only access to Inventory page (modified for customer view)
+Cart to be able to add products (with a page/popup to see the current cart)
+Checkout with Stripe 
+Upon checking out and paying, an invoice is created that is given to the customer and to the Active Invoice page in the Manager/Employee view. Customer should get a notification that the order has been confirmed, Manager/Employee should get a notification that a new order has been submitted 
+Upon having an active order completed, the Customer should receive a notification informing them, and the Manager should be notified that they were notified
+Business Customer
+Everything that the individual customer has with added functionality for recurring orders (possibly even a different inventory page if prices are different in bulk)
+
+Set up the file directory following best practices. I have already make a client and server directory to get you started. Keep in mind that this is supposed to be a web app and that it is to use react as a frontend frame work (with html, js, and css) and nodejs for the backend. Do not write any code for anything yet, just make the file directories. 
