@@ -1,0 +1,61 @@
+/* Shared Table Styles */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  background-color: #2d3748; /* Dark Gray-Blue */
+  color: #e2e8f0; /* Light Gray */
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #4a5568; /* Medium Gray */
+  text-align: left;
+}
+
+.data-table thead th {
+  background-color: #1a202c; /* Very Dark Gray-Blue */
+  color: #a0aec0; /* Lighter Gray for headers */
+  font-weight: bold;
+}
+
+.data-table tbody tr {
+  transition: background-color 0.2s ease-in-out;
+}
+
+.data-table tbody tr:hover {
+  background-color: #4a5568; /* Medium Gray on hover */
+}
+
+/* Style for header above the table */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px; /* Add some space below the header */
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #e2e8f0; /* Light Gray */
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  color: #a0aec0; /* Lighter Gray for icons */
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s ease-in-out;
+}
+
+.icon-button:hover {
+  color: #e2e8f0; /* Light Gray on hover */
+} 

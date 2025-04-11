@@ -1,0 +1,65 @@
+/* Basic Sidebar Styling */
+.sidebar {
+  width: 250px;
+  height: 100vh;
+  background-color: #2d3748; /* Dark Gray-Blue */
+  color: #e2e8f0; /* Light Gray */
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+.sidebar-header {
+  padding: 20px;
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+  /* You might want to add more specific logo styles here */
+  border-bottom: 1px solid #4a5568; /* Medium Gray */
+}
+
+.sidebar-logo {
+  /* Style your logo text/image */
+}
+
+.sidebar-nav {
+  flex-grow: 1;
+  padding-top: 20px;
+}
+
+.sidebar-nav ul,
+.sidebar-footer ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.sidebar-nav li,
+.sidebar-footer li {
+  padding: 10px 20px;
+}
+
+.sidebar-nav a,
+.sidebar-footer a {
+  color: #e2e8f0; /* Light Gray */
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Space between icon and text */
+  transition: background-color 0.2s ease-in-out;
+}
+
+.sidebar-nav a:hover,
+.sidebar-footer a:hover {
+  background-color: #4a5568; /* Medium Gray */
+  border-radius: 4px; /* Slight rounding on hover */
+}
+
+/* Ensure footer stays at the bottom */
+.sidebar-footer {
+  margin-top: auto;
+  padding-bottom: 20px;
+  border-top: 1px solid #4a5568; /* Medium Gray */
+} 
