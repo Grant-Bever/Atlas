@@ -53,14 +53,30 @@
   flex-direction: column;
 }
 
-.employee-card h3 {
-  margin-top: 0;
-  margin-bottom: 15px;
+/* NEW: Card Header for Name and Actions */
+.employee-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start; /* Align items to the top */
+    margin-bottom: 15px;
+    border-bottom: 1px solid #4a5568;
+    padding-bottom: 10px;
+}
+
+.employee-card-header h3 {
+  margin: 0; /* Remove margin from h3 */
   color: #fff;
-  border-bottom: 1px solid #4a5568;
-  padding-bottom: 10px;
   font-size: 1.2rem;
 }
+
+/* Position container relative for dropdown */
+.employee-action-menu-container {
+    position: relative; 
+    /* Reuse action-menu-container styles if defined in Table.css */
+}
+
+/* Reusing menu-dots-button style from Table.css */
+/* Reusing action-menu style from Table.css */
 
 /* Timesheet List/Table Styling */
 .timesheet-list {
@@ -107,4 +123,14 @@
 
 .card-weekly-gross span:first-child {
   color: #cbd5e0;
+}
+
+/* Optional: Style for the Fire confirmation button */
+.button.button-danger {
+    background-color: #c53030; /* Darker Red */
+    color: white;
+}
+
+.button.button-danger:hover {
+    background-color: #9b2c2c; /* Even Darker Red */
 } 

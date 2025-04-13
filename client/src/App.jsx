@@ -35,6 +35,7 @@ function App() {
         <Route path="/totals" element={<ManagerTotals />} />
         <Route path="/employees" element={<ManagerEmployees />} />
         <Route path="/employees/add" element={<AddEmployee />} />
+        <Route path="/employees/edit/:employeeId" element={<AddEmployee />} />
         <Route path="/inventory" element={<ManagerInventory />} />
         <Route path="/inventory/add" element={<AddInventoryItem />} />
         <Route path="/inventory/edit/:itemId" element={<AddInventoryItem />} />
