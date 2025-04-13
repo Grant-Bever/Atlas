@@ -20,6 +20,12 @@
   border-bottom: 1px solid #4a5568; /* Medium Gray */
 }
 
+/* Style the Link wrapping the logo */
+.sidebar-logo-link {
+  text-decoration: none;
+  color: inherit; /* Inherit color from parent */
+}
+
 .sidebar-logo {
   /* Style your logo text/image */
 }
@@ -38,21 +44,27 @@
 
 .sidebar-nav li,
 .sidebar-footer li {
-  padding: 10px 20px;
+  padding: 0; /* Remove padding from li, apply to Link/a instead */
 }
 
+/* Apply styles directly to Link and fallback a tags */
 .sidebar-nav a,
-.sidebar-footer a {
+.sidebar-nav Link,
+.sidebar-footer a,
+.sidebar-footer Link {
   color: #e2e8f0; /* Light Gray */
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 10px; /* Space between icon and text */
+  padding: 10px 20px; /* Add padding here */
   transition: background-color 0.2s ease-in-out;
 }
 
 .sidebar-nav a:hover,
-.sidebar-footer a:hover {
+.sidebar-nav Link:hover,
+.sidebar-footer a:hover,
+.sidebar-footer Link:hover {
   background-color: #4a5568; /* Medium Gray */
   border-radius: 4px; /* Slight rounding on hover */
 }

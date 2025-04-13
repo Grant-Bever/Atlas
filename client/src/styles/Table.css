@@ -2,9 +2,12 @@
 .data-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 20px;
   background-color: #2d3748; /* Dark Gray-Blue */
   color: #e2e8f0; /* Light Gray */
+}
+
+.main-table {
+  margin-top: 20px; /* Add margin only to the main table */
 }
 
 .data-table th,
@@ -12,6 +15,7 @@
   padding: 12px 15px;
   border-bottom: 1px solid #4a5568; /* Medium Gray */
   text-align: left;
+  vertical-align: middle; /* Align content vertically */
 }
 
 .data-table thead th {
@@ -24,8 +28,56 @@
   transition: background-color 0.2s ease-in-out;
 }
 
-.data-table tbody tr:hover {
+/* Apply hover only to the main rows that are clickable */
+.data-table.main-table > tbody > tr.clickable-row:hover {
   background-color: #4a5568; /* Medium Gray on hover */
+  cursor: pointer;
+}
+
+/* Clickable Row Styling */
+.clickable-row {
+  /* Optional: Add other styles to indicate clickability */
+}
+
+.expand-icon-cell {
+  width: 30px; /* Match header width */
+  text-align: center;
+  padding-right: 5px; /* Give icon some space */
+}
+
+/* Collapsible Row Styling */
+.collapsible-row td {
+  padding: 0; /* Remove padding from the cell containing the nested table */
+  border-bottom: 1px solid #4a5568; /* Ensure border matches */
+}
+
+/* Container for the nested table for better control */
+.nested-table-container {
+  padding: 15px 25px 15px 25px; /* Add some padding around the nested table */
+  background-color: #38445a; /* Slightly lighter background for nested area */
+}
+
+.nested-table {
+  background-color: #2d3748; /* Match main table background */
+  margin-bottom: 0; /* No margin below nested table */
+}
+
+.nested-table th {
+  color: #cbd5e0; /* Slightly lighter header text */
+  font-size: 0.9em;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.nested-table td {
+  font-size: 0.9em;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Remove bottom border from last row of nested table */
+.nested-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 /* Style for header above the table */
