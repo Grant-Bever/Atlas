@@ -173,4 +173,49 @@
 .clickable-row.expanded {
     /* Optional: Add a subtle background or border to indicate expansion */
     background-color: #38445a;
+}
+
+/* Style for action bar below header */
+.page-actions-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0; /* Add some vertical padding */
+    margin-bottom: 15px; /* Space below the bar */
+    /* Optional: Add a border or background if desired */
+    /* border-bottom: 1px solid #4a5568; */
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 4px;
+    padding: 0px 5px 0px 10px; /* Adjust padding */
+}
+
+.search-bar input[type="text"] {
+    background: none;
+    border: none;
+    color: #e2e8f0;
+    padding: 8px 0;
+    outline: none;
+}
+
+.search-bar input::placeholder {
+    color: #718096;
+}
+
+.search-bar .icon-button {
+    /* Icons inherit styles, maybe adjust color/size */
+    padding: 8px;
+}
+
+/* Styles specific to totals page summary bar */
+.totals-summary-bar {
+     display: flex;
+     justify-content: flex-end; /* Push revenue to the right */
+     align-items: center;
+     margin-bottom: 20px;
 } 

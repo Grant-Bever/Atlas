@@ -137,21 +137,17 @@ function ManagerActiveOrders() {
 
 
   return (
-    <ManagerLayout>
-      {/* Page Header */}
-      <div className="page-header">
-        <h2>Active Orders</h2>
-        <div className="header-actions">
-          <Link to="/orders/new" className="icon-button">
-            <FaPlus />
-          </Link>
-          {/* Other header actions remain */}
-          <button className="icon-button"><FaUpload /></button>
-          <button className="icon-button"><FaSearch /></button>
+    <ManagerLayout pageTitle="Active Orders">
+      <div className="page-actions-bar">
+        <Link to="/orders/new" className="button button-primary">
+           <FaPlus /> New Invoice
+        </Link>
+         <div className="search-bar">
+             <input type="text" placeholder="Search Orders..." />
+             <button className="icon-button"><FaSearch /></button>
         </div>
       </div>
 
-      {/* Orders Table */}
       <table className="data-table main-table">
         <thead>
           <tr>

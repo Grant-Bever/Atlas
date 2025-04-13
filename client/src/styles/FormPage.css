@@ -1,0 +1,73 @@
+/* FormPage.css */
+/* Shared styles for form-based pages like AddEmployee, EditInvoice etc. */
+
+.form-page-container {
+  background-color: #2d3748; /* Dark Gray-Blue */
+  padding: 25px;
+  border-radius: 8px;
+  color: #e2e8f0; /* Light Gray text */
+  margin-top: 10px;
+  border: 1px solid #4a5568; /* Medium Gray border */
+}
+
+.form-page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding-bottom: 15px;
+  border-bottom: 1px solid #4a5568;
+}
+
+.form-page-header h2 {
+  margin: 0;
+  color: #fff;
+}
+
+.form-page-actions .button {
+  margin-left: 10px;
+}
+
+/* Reusable form grid layout */
+.form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Responsive grid */
+  gap: 25px;
+}
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-field label {
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+  color: #a0aec0; /* Lighter Gray */
+  font-weight: bold;
+}
+
+.form-field input[type="text"],
+.form-field input[type="tel"],
+.form-field input[type="date"],
+.form-field input[type="number"],
+.form-field input[type="email"],
+.form-field select,
+.form-field textarea {
+  padding: 10px 12px;
+  background-color: #1a202c; /* Very Dark Gray-Blue */
+  border: 1px solid #4a5568; /* Medium Gray */
+  border-radius: 4px;
+  color: #e2e8f0; /* Light Gray */
+  font-size: 1rem;
+  width: 100%; /* Ensure inputs take full width of grid cell */
+  box-sizing: border-box;
+}
+
+.form-field input::placeholder,
+.form-field textarea::placeholder {
+    color: #718096; /* Placeholder Gray */
+}
+
+/* Basic button styles assumed to be global or defined elsewhere */
+/* .button, .button-primary, .button-secondary */ 

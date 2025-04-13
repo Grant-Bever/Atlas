@@ -142,7 +142,7 @@ function ManagerNewInvoice() {
   }
 
   return (
-    <ManagerLayout>
+    <ManagerLayout pageTitle="Add Invoice">
       <div className="invoice-form-container">
         <div className="invoice-form-header">
           <h2>{isEditing ? `Edit Invoice #${orderId}` : 'New Invoice'}</h2>

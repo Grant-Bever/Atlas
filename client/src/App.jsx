@@ -12,6 +12,8 @@ import ManagerEmployees from './pages/ManagerEmployees';
 import ManagerInventory from './pages/ManagerInventory';  
 import ManagerTotals from './pages/ManagerTotals';
 import ManagerNewInvoice from './pages/ManagerNewInvoice'; // Import the new page
+import AddEmployee from './pages/ManagerAddEmployee'; // Import AddEmployee
+import AddInventoryItem from './pages/AddInventoryItem'; // Import AddInventoryItem
 // import ManagerCustomers from './pages/ManagerCustomers'; // Add when created
 // import ManagerSettings from './pages/ManagerSettings';   // Add when created
 
@@ -30,7 +32,10 @@ function App() {
         <Route path="/orders/edit/:orderId" element={<ManagerNewInvoice />} />
         <Route path="/totals" element={<ManagerTotals />} />
         <Route path="/employees" element={<ManagerEmployees />} />
+        <Route path="/employees/add" element={<AddEmployee />} />
         <Route path="/inventory" element={<ManagerInventory />} />
+        <Route path="/inventory/add" element={<AddInventoryItem />} />
+        <Route path="/inventory/edit/:itemId" element={<AddInventoryItem />} />
         {/* Add routes for Customers and Settings when components are ready
         <Route path="/customers" element={<ManagerCustomers />} />
         <Route path="/settings" element={<ManagerSettings />} />

@@ -17,11 +17,18 @@
 
 .main-header {
   display: flex;
-  justify-content: flex-end; /* Align date to the right */
-  align-items: center;
+  justify-content: space-between; /* Pushes Title left, Date right */
+  align-items: center; /* Vertically center title and date */
   padding-bottom: 20px;
   border-bottom: 1px solid #4a5568; /* Medium Gray */
   margin-bottom: 20px;
+}
+
+/* Style for the page title within the header */
+.page-title-header {
+    margin: 0; /* Remove default heading margin */
+    font-size: 1.5rem; /* Adjust size as needed */
+    color: #e2e8f0; /* Light Gray */
 }
 
 .current-date {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Totals.css'; // Create this CSS file
-import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload } from 'react-icons/fa';
 
 // --- Sample Data --- 
 // In a real app, this would be fetched and calculated from invoice data
@@ -92,9 +91,8 @@ function ManagerTotals() {
   }, [customerTotals]);
 
   return (
-    <ManagerLayout>
-      <div className="page-header totals-header">
-        <h2>Weekly Customer Totals</h2>
+    <ManagerLayout pageTitle="Weekly Customer Totals">
+      <div className="totals-summary-bar">
         <div className="gross-revenue">
           <span>WEEKLY GROSS REVENUE:</span>
           <span>${grossRevenue.toFixed(2)}</span>

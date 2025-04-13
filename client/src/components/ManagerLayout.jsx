@@ -2,7 +2,7 @@ import React from 'react';
 import Sidebar from '../components/Sidebar';
 import '../styles/ManagerLayout.css';
 
-function ManagerLayout({ children }) {
+function ManagerLayout({ children, pageTitle }) {
   const getCurrentDate = () => {
     const options = { year: 'numeric', month: 'numeric', day: 'numeric' };
     return new Date().toLocaleDateString(undefined, options);
@@ -13,11 +13,11 @@ function ManagerLayout({ children }) {
       <Sidebar />
       <div className="main-content">
         <header className="main-header">
-          {/* Dynamic Date */}
+          <h2 className="page-title-header">{pageTitle || 'Page Title'}</h2>
           <span className="current-date">{getCurrentDate()}</span>
         </header>
         <div className="page-content">
-          {children} {/* Where the specific page content will be rendered */}
+          {children}
         </div>
       </div>
     </div>
