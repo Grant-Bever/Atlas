@@ -24,10 +24,18 @@
 .sidebar-logo-link {
   text-decoration: none;
   color: inherit; /* Inherit color from parent */
+  display: block; /* Ensure the link takes up space */
+  padding: 10px 0; /* Adjust padding as needed */
 }
 
 .sidebar-logo {
-  /* Style your logo text/image */
+  /* Style your logo image */
+  display: block; /* Remove extra space below image */
+  margin: 0 auto; /* Center the logo */
+  max-width: 80%; /* Limit logo width */
+  height: auto;   /* Maintain aspect ratio */
+  /* Add specific height or width if needed */
+  /* height: 60px; */
 }
 
 .sidebar-nav {

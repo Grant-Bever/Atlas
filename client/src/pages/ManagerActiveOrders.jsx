@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Import Modal styles
-import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare, FaHistory } from 'react-icons/fa';
 
 // Initial Sample Data (will be moved to state)
 const initialSampleOrders = [
@@ -139,12 +139,19 @@ function ManagerActiveOrders() {
   return (
     <ManagerLayout pageTitle="Active Orders">
       <div className="page-actions-bar">
-        <Link to="/orders/new" className="button button-primary">
-           <FaPlus /> New Invoice
-        </Link>
-         <div className="search-bar">
-             <input type="text" placeholder="Search Orders..." />
-             <button className="icon-button"><FaSearch /></button>
+        <div className="page-actions-left">
+            <Link to="/orders/new" className="button button-primary">
+                <FaPlus /> New Invoice
+            </Link>
+            <Link to="/orders/completed" className="button button-secondary" title="View Completed Orders">
+                <FaHistory /> Completed
+            </Link>
+        </div>
+        <div className="page-actions-right">
+            <div className="search-bar">
+                <input type="text" placeholder="Search Active Orders..." />
+                <button className="icon-button"><FaSearch /></button>
+            </div>
         </div>
       </div>
 

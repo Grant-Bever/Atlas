@@ -2,14 +2,14 @@ import React from 'react';
 import { Link } from 'react-router-dom'; // Import Link
 import { FaFileInvoiceDollar, FaUsers, FaBoxOpen, FaCog, FaSignOutAlt, FaDollarSign } from 'react-icons/fa'; // Removed FaClock
 import '../styles/Sidebar.css';
+import atlasLogo from '../assets/Atlas-Logo-Final.png'; // Import the logo image
 
 function Sidebar() {
   return (
     <div className="sidebar">
       <div className="sidebar-header">
-        {/* You can replace this with your actual logo */}
         <Link to="/orders" className="sidebar-logo-link">
-          <span className="sidebar-logo">ATLAS</span>
+          <img src={atlasLogo} alt="Atlas Logo" className="sidebar-logo" />
         </Link>
       </div>
       <nav className="sidebar-nav">
