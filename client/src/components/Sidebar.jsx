@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom'; // Import Link
-import { FaFileInvoiceDollar, FaUsers, FaBoxOpen, FaCog, FaSignOutAlt, FaDollarSign, FaClock } from 'react-icons/fa'; // Using react-icons
+import { FaFileInvoiceDollar, FaUsers, FaBoxOpen, FaCog, FaSignOutAlt, FaDollarSign } from 'react-icons/fa'; // Removed FaClock
 import '../styles/Sidebar.css';
 
 function Sidebar() {

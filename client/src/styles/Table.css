@@ -110,4 +110,67 @@
 
 .icon-button:hover {
   color: #e2e8f0; /* Light Gray on hover */
+}
+
+/* Add relative positioning to the cell */
+.action-cell {
+  position: relative;
+  text-align: center;
+  padding: 0; /* Remove padding to allow precise button positioning */
+  width: 50px; /* Fixed width */
+}
+
+.menu-dots-button {
+  padding: 8px; /* Give some clickable area */
+}
+
+/* Actions Menu Dropdown */
+.action-menu-container {
+    position: relative; /* Needed for absolute positioning of menu */
+}
+
+.action-menu {
+  position: absolute;
+  right: 40px; /* Position menu slightly to the left of the dots */
+  top: 5px;    /* Position slightly below the top of the cell */
+  background-color: #4a5568; /* Medium Gray background */
+  border: 1px solid #718096; /* Lighter Gray border */
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10; /* Ensure menu is above table content */
+  min-width: 150px;
+  padding: 5px 0;
+}
+
+.action-menu button {
+  display: flex; /* Align icon and text */
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #e2e8f0; /* Light Gray text */
+  padding: 8px 15px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.action-menu button:hover {
+  background-color: #2d3748; /* Darker Gray-Blue on hover */
+}
+
+.action-menu button.danger {
+    color: #f56565; /* Red for danger actions */
+}
+
+.action-menu button.danger:hover {
+    color: #fff;
+    background-color: #c53030; /* Darker red background on hover */
+}
+
+/* Style for expanded row */
+.clickable-row.expanded {
+    /* Optional: Add a subtle background or border to indicate expansion */
+    background-color: #38445a;
 } 

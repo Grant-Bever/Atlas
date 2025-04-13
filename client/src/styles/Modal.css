@@ -1,0 +1,48 @@
+/* Modal.css */
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6); /* Semi-transparent background */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000; /* Ensure modal is on top */
+}
+
+.modal-content {
+  background-color: #2d3748; /* Dark Gray-Blue */
+  color: #e2e8f0; /* Light Gray text */
+  padding: 25px 30px;
+  border-radius: 8px;
+  border: 1px solid #4a5568;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  min-width: 300px;
+  max-width: 500px;
+}
+
+.modal-content h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #fff;
+  font-size: 1.3rem;
+  border-bottom: 1px solid #4a5568;
+  padding-bottom: 10px;
+}
+
+.modal-content p {
+  margin-bottom: 25px;
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Use general button styles defined elsewhere if available */
+/* Assuming .button, .button-primary, .button-secondary are defined globally or in another imported file */ 

@@ -11,6 +11,7 @@ import ManagerActiveOrders from './pages/ManagerActiveOrders';
 import ManagerEmployees from './pages/ManagerEmployees';   
 import ManagerInventory from './pages/ManagerInventory';  
 import ManagerTotals from './pages/ManagerTotals';
+import ManagerNewInvoice from './pages/ManagerNewInvoice'; // Import the new page
 // import ManagerCustomers from './pages/ManagerCustomers'; // Add when created
 // import ManagerSettings from './pages/ManagerSettings';   // Add when created
 
@@ -25,6 +26,8 @@ function App() {
         {/* Redirect base path "/" to "/orders" by default */}
         <Route path="/" element={<Navigate to="/orders" replace />} />
         <Route path="/orders" element={<ManagerActiveOrders />} />
+        <Route path="/orders/new" element={<ManagerNewInvoice />} />
+        <Route path="/orders/edit/:orderId" element={<ManagerNewInvoice />} />
         <Route path="/totals" element={<ManagerTotals />} />
         <Route path="/employees" element={<ManagerEmployees />} />
         <Route path="/inventory" element={<ManagerInventory />} />

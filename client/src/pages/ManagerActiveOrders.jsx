@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
-import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import '../styles/Modal.css'; // Import Modal styles
+import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare } from 'react-icons/fa';
 
-// Sample data - Updated with nested items
-const sampleOrders = [
+// Initial Sample Data (will be moved to state)
+const initialSampleOrders = [
   {
     id: 112,
     customer: 'Michoacano',
@@ -46,49 +48,130 @@ const sampleOrders = [
 ];
 
 function ManagerActiveOrders() {
-  // State to keep track of expanded rows (using a Set for efficient add/delete/check)
+  const navigate = useNavigate();
+  const [orders, setOrders] = useState(initialSampleOrders); // Manage orders in state
   const [expandedRows, setExpandedRows] = useState(new Set());
+  const [openMenuId, setOpenMenuId] = useState(null); // Track which menu is open
+  const [confirmModalState, setConfirmModalState] = useState({ isOpen: false, orderId: null });
 
+  // --- Row Expansion --- 
   const handleRowClick = (orderId) => {
+     // Close menu if clicking on a row
+    if (openMenuId !== null) {
+        setOpenMenuId(null);
+    }
     setExpandedRows(prevExpandedRows => {
       const newExpandedRows = new Set(prevExpandedRows);
       if (newExpandedRows.has(orderId)) {
-        newExpandedRows.delete(orderId); // Collapse if already expanded
+        newExpandedRows.delete(orderId);
       } else {
-        newExpandedRows.add(orderId); // Expand if collapsed
+        newExpandedRows.add(orderId);
       }
       return newExpandedRows;
     });
   };
 
+  // --- Actions Menu --- 
+  const handleMenuToggle = (e, orderId) => {
+    e.stopPropagation(); // Prevent row click when clicking dots
+    setOpenMenuId(prevId => (prevId === orderId ? null : orderId));
+    // Close expanded row if opening menu for it
+    if (expandedRows.has(orderId) && openMenuId !== orderId) {
+        handleRowClick(orderId); 
+    }
+  };
+
+  // Close menu if clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (openMenuId !== null && !event.target.closest('.action-menu-container')) {
+        setOpenMenuId(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [openMenuId]);
+
+  // --- Action Handlers --- 
+  const handleEdit = (e, orderId) => {
+    e.stopPropagation();
+    setOpenMenuId(null); // Close menu
+    navigate(`/orders/edit/${orderId}`);
+  };
+
+  const handleDelete = (e, orderId) => {
+    e.stopPropagation();
+    // Update state to remove the order (replace with API call later)
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+    setOpenMenuId(null); // Close menu
+    // Also remove from expanded rows if it was expanded
+    setExpandedRows(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(orderId);
+        return newSet;
+    });
+    console.log(`Delete order: ${orderId}`);
+  };
+
+  const handleMarkCompleteClick = (e, orderId) => {
+    e.stopPropagation();
+    setOpenMenuId(null); // Close menu
+    setConfirmModalState({ isOpen: true, orderId: orderId }); // Open modal
+  };
+
+  // --- Modal Handlers --- 
+  const handleConfirmComplete = () => {
+    const orderId = confirmModalState.orderId;
+    console.log(`Order ${orderId} marked complete. Notify customer.`);
+    // TODO: API call to mark complete & notify
+    // For now, just remove from active orders list visually
+    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+    setConfirmModalState({ isOpen: false, orderId: null }); // Close modal
+  };
+
+  const handleCancelComplete = () => {
+    setConfirmModalState({ isOpen: false, orderId: null }); // Close modal
+  };
+
+
   return (
     <ManagerLayout>
+      {/* Page Header */}
       <div className="page-header">
         <h2>Active Orders</h2>
         <div className="header-actions">
-          <button className="icon-button"><FaPlus /></button>
-          <button className="icon-button"><FaEdit /></button>
+          <Link to="/orders/new" className="icon-button">
+            <FaPlus />
+          </Link>
+          {/* Other header actions remain */}
           <button className="icon-button"><FaUpload /></button>
-          <button className="icon-button"><FaTrashAlt /></button>
           <button className="icon-button"><FaSearch /></button>
         </div>
       </div>
+
+      {/* Orders Table */}
       <table className="data-table main-table">
         <thead>
           <tr>
-            <th style={{ width: '30px' }}></th>
+            <th style={{ width: '30px' }}></th>{/* Expand Icon */}
             <th>Invoice #</th>
             <th>Customer</th>
             <th>Date</th>
             <th>Total</th>
+            <th style={{ width: '50px' }}></th>{/* Actions Menu */}
           </tr>
         </thead>
         <tbody>
-          {sampleOrders.map((order) => {
+          {orders.length > 0 ? orders.map((order) => {
             const isExpanded = expandedRows.has(order.id);
+            const isMenuOpen = openMenuId === order.id;
+
             return (
               <React.Fragment key={order.id}>
-                <tr onClick={() => handleRowClick(order.id)} className="clickable-row">
+                {/* Main Order Row */}
+                <tr onClick={() => handleRowClick(order.id)} className={`clickable-row ${isExpanded ? 'expanded' : ''}`}>
                   <td className="expand-icon-cell">
                     {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
                   </td>
@@ -96,39 +179,56 @@ function ManagerActiveOrders() {
                   <td>{order.customer}</td>
                   <td>{order.date}</td>
                   <td>${order.total.toFixed(2)}</td>
+                  {/* Actions Cell */}
+                  <td className="action-cell action-menu-container">
+                    <button onClick={(e) => handleMenuToggle(e, order.id)} className="icon-button menu-dots-button">
+                      <FaEllipsisV />
+                    </button>
+                    {/* Action Menu Dropdown */}
+                    {isMenuOpen && (
+                      <div className="action-menu">
+                        <button onClick={(e) => handleEdit(e, order.id)}><FaEdit /> Edit</button>
+                        <button onClick={(e) => handleDelete(e, order.id)} className="danger"><FaTrashAlt /> Delete</button>
+                        <button onClick={(e) => handleMarkCompleteClick(e, order.id)}><FaCheckSquare /> Mark Complete</button> {/* Example icon */} 
+                      </div>
+                    )}
+                  </td>
                 </tr>
+
+                {/* Collapsible Row with Nested Table */}
                 {isExpanded && (
-                  <tr className="collapsible-row">
-                    <td></td>
-                    <td colSpan="4">
+                   <tr className="collapsible-row">
+                    <td></td> {/* Spacer for expand icon */} 
+                    <td colSpan="5"> {/* Span across remaining cols + actions col */} 
                       <div className="nested-table-container">
                         <table className="data-table nested-table">
+                          {/* ... nested table thead/tbody ... */}
                           <thead>
-                            <tr>
-                              <th>Quantity</th>
-                              <th>Description</th>
-                              <th>Weight</th>
-                              <th>Price</th>
-                              <th>Amount</th>
-                            </tr>
+                             <tr>
+                               <th>Quantity</th>
+                               <th>Description</th>
+                               <th>Weight</th>
+                               <th>Price</th>
+                               <th>Amount</th>
+                             </tr>
                           </thead>
                           <tbody>
-                            {order.items.length > 0 ? (
-                              order.items.map((item, index) => (
-                                <tr key={`${order.id}-item-${index}`}>
-                                  <td>{item.quantity}</td>
-                                  <td>{item.description}</td>
-                                  <td>{item.weight}</td>
-                                  <td>${item.price.toFixed(2)}</td>
-                                  <td>${item.amount.toFixed(2)}</td>
-                                </tr>
+                          {order.items.length > 0 ? (
+                             order.items.map((item, index) => (
+                             <tr key={`${order.id}-item-${index}`}>
+                               <td>{item.quantity}</td>
+                               <td>{item.description}</td>
+                               <td>{item.weight}</td>
+                               <td>${item.price.toFixed(2)}</td>
+                               <td>${item.amount.toFixed(2)}</td>
+                             </tr>
                               ))
-                            ) : (
+                           ) : (
                               <tr>
                                 <td colSpan="5" style={{ textAlign: 'center', fontStyle: 'italic' }}>No items in this order.</td>
-                              </tr>
+                               </tr>
                             )}
-                          </tbody>
+                           </tbody>
                         </table>
                       </div>
                     </td>
@@ -136,9 +236,27 @@ function ManagerActiveOrders() {
                 )}
               </React.Fragment>
             );
-          })}
+          }) : (
+             <tr>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No active orders found.</td>
+             </tr>
+          )} 
         </tbody>
       </table>
+
+      {/* Confirmation Modal */}
+      {confirmModalState.isOpen && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h4>Confirm Order Completion</h4>
+            <p>Are you sure you want to mark order #{confirmModalState.orderId} as complete? This will notify the customer.</p>
+            <div className="modal-actions">
+              <button onClick={handleCancelComplete} className="button button-secondary">Cancel</button>
+              <button onClick={handleConfirmComplete} className="button button-primary">Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
     </ManagerLayout>
   );
 }
