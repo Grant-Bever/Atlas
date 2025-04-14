@@ -57,10 +57,23 @@
 .employee-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* Align items to the top */
+    align-items: flex-start; /* Align top edges */
     margin-bottom: 15px;
     border-bottom: 1px solid #4a5568;
     padding-bottom: 10px;
+    gap: 15px; /* Add some space between left/right */
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 5px; /* Space between name and status */
+}
+
+.header-right {
+    display: flex;
+    align-items: flex-start; /* Align buttons/menu to top */
+    gap: 10px; /* Space between approve/deny buttons and menu */
 }
 
 .employee-card-header h3 {
@@ -133,4 +146,73 @@
 
 .button.button-danger:hover {
     background-color: #9b2c2c; /* Even Darker Red */
+}
+
+/* NEW: Success Button Style (for Approve) */
+.button.button-success {
+    background-color: #2f855a; /* Dark Green */
+    color: white;
+}
+
+.button.button-success:hover:not(:disabled) {
+    background-color: #276749; /* Darker Green */
+}
+
+/* NEW: Warning Button Style (for Deny) */
+.button.button-warning {
+    background-color: #dd6b20; /* Dark Orange */
+    color: white;
+}
+
+.button.button-warning:hover:not(:disabled) {
+    background-color: #c05621; /* Darker Orange */
+}
+
+/* NEW: Small Button Variant */
+.button.button-small {
+    padding: 5px 10px; /* Smaller padding */
+    font-size: 0.85rem; /* Smaller font */
+    display: flex;
+    align-items: center;
+    gap: 5px; /* Space between icon and text */
+}
+
+/* NEW: Disabled Button Style */
+.button:disabled {
+    background-color: #4a5568; /* Medium Gray */
+    color: #a0aec0; /* Lighter Gray */
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* NEW: Approval Status Display */
+.approval-status {
+    font-size: 0.85rem;
+    font-weight: bold;
+    padding: 3px 8px;
+    border-radius: 4px;
+    display: inline-block; /* Fit content */
+    margin-top: 4px; /* Space below name */
+    white-space: nowrap; /* Prevent text wrapping */
+}
+
+.approval-status.pending {
+    background-color: #4a5568; /* Medium Gray */
+    color: #e2e8f0;
+}
+
+.approval-status.approved {
+    background-color: #2f855a; /* Dark Green */
+    color: white;
+}
+
+.approval-status.denied {
+    background-color: #c05621; /* Darker Orange */
+    color: white;
+}
+
+/* NEW: Timesheet Approval Action Buttons Group */
+.timesheet-approval-actions {
+    display: flex;
+    gap: 8px; /* Space between approve/deny */
 } 
