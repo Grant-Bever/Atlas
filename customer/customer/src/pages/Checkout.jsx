@@ -61,12 +61,12 @@ function Checkout() {
         total
       };
       
-      // Call API to create order
-      await api.createOrder(orderData);
+      // Call API to create order (ONLY ONCE)
+      // await api.createOrder(orderData); // REMOVE this duplicate call
       
       // Clear cart and show success message
-      localStorage.removeItem('cart');
-      const response = await api.createOrder(orderData);
+      localStorage.removeItem('cart'); 
+      const response = await api.createOrder(orderData); // Keep this call to get the response
       const orderId = response.data.order.id;
       alert(`Order #${orderId} placed successfully!`);
       

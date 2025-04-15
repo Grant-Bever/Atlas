@@ -22,29 +22,29 @@ const createInvoice = async (invoiceData) => {
 
   try {
     // --- Find or Create Customer ---
+    // Find based on phone number, create with name/phone if not found.
     const [customer, created] = await Customer.findOrCreate({
       where: { 
-        name: { [Op.iLike]: customerName.trim() } 
+        // Find using phone number (assuming phone is unique or reliable enough)
+        phone: customerPhone.trim() 
       },
-      defaults: { // Fields to use if the customer needs to be created
-        name: customerName.trim(),
+      defaults: { // Fields to use ONLY if the customer needs to be created
+        name: customerName.trim(), // Use name from input for new customer
         phone: customerPhone.trim(),
-        // Set email and password to null by default now that DB allows it
-        email: null, 
+        email: null, // Default other fields
         password: null 
       },
       transaction // Ensure findOrCreate is part of the transaction
     });
 
     if (created) {
-        console.log(`Created new customer: ${customer.name} (ID: ${customer.id})`);
+        console.log(`Created new customer: ${customer.name} with phone ${customer.phone} (ID: ${customer.id})`);
     } else {
-        console.log(`Found existing customer: ${customer.name} (ID: ${customer.id})`);
-        // Optional: Update phone number if it differs? Decide based on requirements.
-        // if (customer.phone !== customerPhone.trim()) {
-        //    await customer.update({ phone: customerPhone.trim() }, { transaction });
-        //    console.log(`Updated phone for customer ${customer.id}`);
-        // }
+        console.log(`Found existing customer by phone ${customer.phone}: ${customer.name} (ID: ${customer.id})`);
+        // **IMPORTANT**: Do NOT update the existing customer's name here based on checkout input.
+        // If the name provided in checkout (customerName) is different from customer.name,
+        // that information is relevant to *this order* but shouldn't change the Customer record itself.
+        // If you need to update customer profiles, that should be a separate feature/endpoint.
     }
 
     customer_id = customer.id;
