@@ -24,7 +24,13 @@ const createInvoice = async (req, res) => {
 // Controller to get active invoices
 const getActiveInvoices = async (req, res) => {
   try {
-    const invoices = await orderService.getActiveInvoices();
+    // Extract options from query parameters
+    const options = {
+      searchCustomer: req.query.searchCustomer,
+      sortBy: req.query.sortBy,
+      sortDir: req.query.sortDir
+    };
+    const invoices = await orderService.getActiveInvoices(options);
     res.status(200).json(invoices);
   } catch (error) {
     console.error('Controller error getting active invoices:', error.message);
@@ -35,7 +41,13 @@ const getActiveInvoices = async (req, res) => {
 // Controller to get completed invoices
 const getCompletedInvoices = async (req, res) => {
   try {
-    const invoices = await orderService.getCompletedInvoices();
+     // Extract options from query parameters
+     const options = {
+      searchCustomer: req.query.searchCustomer,
+      sortBy: req.query.sortBy,
+      sortDir: req.query.sortDir
+    };
+    const invoices = await orderService.getCompletedInvoices(options);
     res.status(200).json(invoices);
   } catch (error) {
     console.error('Controller error getting completed invoices:', error.message);

@@ -150,11 +150,11 @@ function ManagerNewInvoice() {
      }
 
     // Prepare payload for the API - Sending name and phone
-    const itemPayload = items.map(({ id, amount, ...rest }) => ({ // Exclude frontend ID and calculated amount
+    const itemPayload = items.map(({ id, ...rest }) => ({ // Include amount now
         ...rest,
         quantity: parseFloat(rest.quantity) || 0,
         price: parseFloat(rest.price) || 0,
-        // amount is calculated on backend or DB trigger ideally, or ensure total matches items sum
+        amount: parseFloat(rest.amount) || 0, // Ensure amount is included and is a number
         weight: rest.weight ? parseFloat(rest.weight) : null,
     }));
 

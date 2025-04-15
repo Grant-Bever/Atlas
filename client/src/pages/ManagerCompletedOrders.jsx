@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Keep for potential future modals
-import { FaSearch, FaChevronDown, FaChevronRight, FaEllipsisV, FaEye, FaTrashAlt, FaArrowLeft } from 'react-icons/fa'; // Adjusted icons
+import { FaSearch, FaChevronDown, FaChevronRight, FaEllipsisV, FaEye, FaTrashAlt, FaArrowLeft, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'; // Adjusted icons
 
 // Base URL for the API (Consider moving this to a config file)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -18,13 +18,29 @@ function ManagerCompletedOrders() {
   // Add state for delete confirmation modal if desired
   const [confirmDeleteModalState, setConfirmDeleteModalState] = useState({ isOpen: false, orderId: null });
 
+  // State for search and sort
+  const [searchTerm, setSearchTerm] = useState('');
+  const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'DESC' });
+  const [searchQuery, setSearchQuery] = useState(''); // For triggering search fetch
+
   // --- Fetch Completed Orders ---
   useEffect(() => {
     const fetchCompletedOrders = async () => {
       setLoading(true);
       setError(null);
+      // Construct query parameters
+      const params = new URLSearchParams();
+      if (searchQuery) {
+        params.append('searchCustomer', searchQuery);
+      }
+      if (sortConfig.key) {
+        params.append('sortBy', sortConfig.key);
+        params.append('sortDir', sortConfig.direction);
+      }
+      const queryString = params.toString();
+
       try {
-        const response = await fetch(`${API_BASE_URL}/orders/completed`);
+        const response = await fetch(`${API_BASE_URL}/orders/completed?${queryString}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -44,7 +60,8 @@ function ManagerCompletedOrders() {
     };
 
     fetchCompletedOrders();
-  }, []);
+     // Re-fetch when searchQuery or sortConfig changes
+  }, [searchQuery, sortConfig]);
 
   // --- Row Expansion --- (Same logic as active orders)
   const handleRowClick = (orderId) => {
@@ -137,6 +154,47 @@ function ManagerCompletedOrders() {
     setConfirmDeleteModalState({ isOpen: false, orderId: null });
   };
 
+  // --- Search Handler ---
+  const handleSearchChange = (event) => {
+    const newSearchTerm = event.target.value;
+    setSearchTerm(newSearchTerm);
+    // If the search term is cleared, immediately reset the search query
+    if (newSearchTerm === '') {
+      setSearchQuery('');
+    }
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    // Only trigger search if the term is not empty
+    if (searchTerm.trim() !== '') {
+        setSearchQuery(searchTerm);
+    }
+    // else {
+    //     setSearchQuery('');
+    // }
+  };
+
+  // --- Sort Handler ---
+  const handleSort = (key) => {
+    let direction = 'ASC';
+    if (sortConfig.key === key && sortConfig.direction === 'ASC') {
+      direction = 'DESC';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  // Helper function to get sort icon
+  const getSortIcon = (key) => {
+    if (sortConfig.key !== key) {
+      return <FaSort className="sort-icon" />;
+    }
+    if (sortConfig.direction === 'ASC') {
+      return <FaSortUp className="sort-icon active" />;
+    }
+    return <FaSortDown className="sort-icon active" />;
+  };
+
   // --- Render Logic ---
    if (loading) {
        return <ManagerLayout pageTitle="Completed Orders"><div className="loading-indicator">Loading completed orders...</div></ManagerLayout>;
@@ -159,11 +217,15 @@ function ManagerCompletedOrders() {
              </Link>
          </div>
          <div className="page-actions-right">
-             {/* TODO: Implement Search */}
-            <div className="search-bar">
-                <input type="text" placeholder="Search Completed Orders..." />
-                <button className="icon-button"><FaSearch /></button>
-            </div>
+             <form onSubmit={handleSearchSubmit} className="search-bar">
+                 <input
+                     type="text"
+                     placeholder="Search by Customer..."
+                     value={searchTerm}
+                     onChange={handleSearchChange}
+                 />
+                 <button type="submit" className="icon-button"><FaSearch /></button>
+             </form>
         </div>
       </div>
 
@@ -177,8 +239,12 @@ function ManagerCompletedOrders() {
             <th style={{ width: '30px' }}></th>{/* Expand Icon */}
             <th>Invoice #</th>
             <th>Customer</th>
-            <th>Date Completed</th> {/* Changed header slightly */}
-            <th>Total</th>
+            <th onClick={() => handleSort('date')} className="sortable-header">
+                Date Completed {getSortIcon('date')}
+            </th>
+            <th onClick={() => handleSort('total')} className="sortable-header">
+                Total {getSortIcon('total')}
+            </th>
             <th style={{ width: '50px' }}></th>{/* Actions Menu */}
           </tr>
         </thead>
@@ -260,7 +326,7 @@ function ManagerCompletedOrders() {
             );
           }) : (
              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No completed orders found.</td>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No completed orders found matching your criteria.</td>
              </tr>
           )}
         </tbody>

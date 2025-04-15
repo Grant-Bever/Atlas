@@ -235,4 +235,27 @@
      justify-content: flex-end; /* Push revenue to the right */
      align-items: center;
      margin-bottom: 20px;
+}
+
+/* Styles for sortable table headers */
+.sortable-header {
+    cursor: pointer;
+    user-select: none; /* Prevent text selection on click */
+}
+
+.sortable-header:hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Slight highlight on hover */
+}
+
+.sort-icon {
+    display: inline-block;
+    margin-left: 6px;
+    color: #a0aec0; /* Lighter gray for default icon */
+    vertical-align: middle;
+    opacity: 0.6;
+}
+
+.sort-icon.active {
+    color: #fff; /* White for active icon */
+    opacity: 1;
 } 

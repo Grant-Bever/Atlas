@@ -92,40 +92,102 @@ const createInvoice = async (invoiceData) => {
 
 /**
  * Retrieves active (not completed) invoices, optionally with items and customer.
+ * Allows filtering by customer name and sorting.
+ * @param {object} options - Filtering and sorting options.
+ * @param {string} [options.searchCustomer] - Search term for customer name.
+ * @param {string} [options.sortBy='date'] - Column to sort by ('date', 'total', 'customerName').
+ * @param {string} [options.sortDir='DESC'] - Sort direction ('ASC', 'DESC').
  * @returns {Promise<Array<object>>} Array of active invoice objects.
  */
-const getActiveInvoices = async () => {
+const getActiveInvoices = async (options = {}) => {
+  const { searchCustomer, sortBy = 'date', sortDir = 'DESC' } = options;
+  const whereClause = { completed: false };
+  const includeClause = [
+      { model: InvoiceItem, as: 'items' },
+      { model: Customer, as: 'customer' }
+  ];
+  let orderClause = [];
+
+  // Add search condition if provided
+  if (searchCustomer) {
+    // Add where condition to the included Customer model
+     includeClause.find(inc => inc.as === 'customer').where = {
+         name: { [Op.iLike]: `%${searchCustomer}%` } // Case-insensitive partial match
+     };
+  }
+
+  // Determine sorting column and direction
+  const direction = sortDir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  if (sortBy === 'customerName') {
+    // Sort by associated customer name
+    orderClause.push([Customer, 'name', direction]);
+  } else if (sortBy === 'total') {
+    orderClause.push(['total', direction]);
+  } else {
+    // Default sort by date
+    orderClause.push(['date', direction]);
+  }
+  // Add secondary sort by ID to ensure consistent ordering
+  orderClause.push(['id', 'DESC']);
+
   try {
     return await Invoice.findAll({
-      where: { completed: false },
-      include: [
-        { model: InvoiceItem, as: 'items' },
-        { model: Customer, as: 'customer' }
-      ],
-      order: [['date', 'DESC'], ['id', 'DESC']]
+      where: whereClause,
+      include: includeClause,
+      order: orderClause,
+      required: !!searchCustomer // Make Customer include mandatory if searching by it
     });
   } catch (error) {
-    console.error("Error fetching active invoices:", error);
+    console.error("Error fetching active invoices with options:", error);
     throw new Error('Failed to fetch active invoices.');
   }
 };
 
 /**
  * Retrieves completed invoices, optionally with items and customer.
+ * Allows filtering by customer name and sorting.
+ * @param {object} options - Filtering and sorting options.
+ * @param {string} [options.searchCustomer] - Search term for customer name.
+ * @param {string} [options.sortBy='date'] - Column to sort by ('date', 'total', 'customerName').
+ * @param {string} [options.sortDir='DESC'] - Sort direction ('ASC', 'DESC').
  * @returns {Promise<Array<object>>} Array of completed invoice objects.
  */
-const getCompletedInvoices = async () => {
+const getCompletedInvoices = async (options = {}) => {
+  const { searchCustomer, sortBy = 'date', sortDir = 'DESC' } = options;
+  const whereClause = { completed: true };
+  const includeClause = [
+      { model: InvoiceItem, as: 'items' },
+      { model: Customer, as: 'customer' }
+  ];
+  let orderClause = [];
+
+  // Add search condition if provided
+  if (searchCustomer) {
+     includeClause.find(inc => inc.as === 'customer').where = {
+         name: { [Op.iLike]: `%${searchCustomer}%` }
+     };
+  }
+
+  // Determine sorting column and direction
+  const direction = sortDir.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
+  if (sortBy === 'customerName') {
+    orderClause.push([Customer, 'name', direction]);
+  } else if (sortBy === 'total') {
+    orderClause.push(['total', direction]);
+  } else {
+    orderClause.push(['date', direction]);
+  }
+  orderClause.push(['id', 'DESC']);
+
   try {
     return await Invoice.findAll({
-      where: { completed: true },
-      include: [
-        { model: InvoiceItem, as: 'items' },
-        { model: Customer, as: 'customer' }
-      ],
-      order: [['date', 'DESC'], ['id', 'DESC']]
+      where: whereClause,
+      include: includeClause,
+      order: orderClause,
+      required: !!searchCustomer // Make Customer include mandatory if searching by it
     });
   } catch (error) {
-    console.error("Error fetching completed invoices:", error);
+    console.error("Error fetching completed invoices with options:", error);
     throw new Error('Failed to fetch completed invoices.');
   }
 };
