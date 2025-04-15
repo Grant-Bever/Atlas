@@ -3,21 +3,14 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/FormPage.css'; // Shared form styles
 
-// --- Sample Data Fetching (Replace with actual API calls) ---
-const fetchInventoryItemData = (itemId) => {
-  console.log("Fetching data for item ID:", itemId);
-  // Simulate finding item data
-  const allItems = [
-    { id: 'b1', name: 'Ribeye', quantity: 25, pricePerPound: 12.99, category: 'Beef' },
-    { id: 'p1', name: 'Chicken Breast', quantity: 80, pricePerPound: 3.99, category: 'Poultry' },
-    // ... other items
-  ];
-  const foundItem = allItems.find(item => item.id === itemId);
-  return foundItem ? Promise.resolve(foundItem) : Promise.resolve(null);
-};
+// Base URL for the API
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+
+// --- REMOVE Sample Data Fetching ---
+// const fetchInventoryItemData = (itemId) => { ... }; // REMOVED
 
 const fetchCategories = () => {
-    // Simulate fetching existing categories
+    // Simulate fetching existing categories - Keep for now, replace later if needed
     return Promise.resolve(['Beef', 'Poultry', 'Pork', 'Miscellaneous']);
 };
 // --- End Sample Data Fetching ---
@@ -45,22 +38,48 @@ function AddInventoryItem() {
   // Fetch categories and item data (if editing)
   useEffect(() => {
     setIsLoading(true);
-    Promise.all([fetchCategories(), isEditing ? fetchInventoryItemData(itemId) : Promise.resolve(null)])
+    setError(null);
+
+    // Promise for fetching categories (using placeholder for now)
+    const categoriesPromise = fetchCategories();
+
+    // Promise for fetching item data ONLY if editing
+    const itemDataPromise = isEditing
+        ? fetch(`${API_BASE_URL}/inventory/${itemId}`)
+            .then(res => {
+                if (!res.ok) {
+                    if (res.status === 404) {
+                        throw new Error('Inventory item not found.');
+                    }
+                    // Try to parse error message from backend
+                    return res.json().then(errData => {
+                         throw new Error(errData.message || 'Failed to fetch inventory item.');
+                    });
+                }
+                return res.json(); // Parse successful response
+            })
+        : Promise.resolve(null); // Resolve with null if not editing
+
+    Promise.all([categoriesPromise, itemDataPromise])
       .then(([categories, itemData]) => {
         setExistingCategories(categories || []);
-        
+
         if (isEditing) {
           if (itemData) {
             setItemName(itemData.name || '');
             setQuantity(itemData.quantity !== undefined ? String(itemData.quantity) : '');
-            setPricePerPound(itemData.pricePerPound !== undefined ? String(itemData.pricePerPound) : '');
-            // Ensure the item's category is selected, even if it was newly created before
-            if (itemData.category && !categories.includes(itemData.category)) {
-                 setExistingCategories(prev => [...prev, itemData.category]);
+            // Use price_per_pound from backend data
+            setPricePerPound(itemData.price_per_pound !== undefined ? String(itemData.price_per_pound) : '');
+
+            const itemCategory = itemData.category || '';
+            // Ensure the item's category is in the list, even if it was newly created before
+            if (itemCategory && !categories.includes(itemCategory)) {
+                 setExistingCategories(prev => [...new Set([...prev, itemCategory])]); // Use Set to avoid duplicates
             }
-            setSelectedCategory(itemData.category || '');
+            setSelectedCategory(itemCategory);
 
           } else {
+            // This case might be handled by the fetch error now, but keep as fallback
             setError('Inventory item not found.');
           }
         } else {
@@ -70,12 +89,12 @@ function AddInventoryItem() {
       })
       .catch(err => {
         console.error("Error loading data:", err);
-        setError('Failed to load data.');
+        setError(err.message || 'Failed to load data.'); // Display specific error message
       })
       .finally(() => {
         setIsLoading(false);
       });
-  }, [itemId, isEditing]);
+  }, [itemId, isEditing]); // Dependencies: itemId and isEditing
 
   // Handle category dropdown change
   const handleCategoryChange = (e) => {
@@ -109,18 +128,57 @@ function AddInventoryItem() {
         name: itemName,
         category: finalCategory,
         quantity: parseFloat(quantity) || 0,
-        pricePerPound: parseFloat(pricePerPound) || 0
+        price_per_pound: parseFloat(pricePerPound) || 0,
+        // Add price_per_box if you have an input & state for it
+        // price_per_box: parseFloat(pricePerBox) || 0 
     };
 
-    if (isEditing) {
-        console.log(`UPDATING Item ${itemId}:`, itemPayload);
-        // TODO: Call API to update itemId
-    } else {
-        console.log("SAVING New Item:", itemPayload);
-        // TODO: Call API to create new item
-    }
+    // Clear previous errors
+    setError(null);
 
-    navigate('/inventory'); // Navigate back to inventory list
+    const saveItem = async () => {
+        setIsLoading(true); // Show loading state during save
+        try {
+            let response;
+            let successMessage;
+
+            if (isEditing) {
+                console.log(`UPDATING Item ${itemId}:`, itemPayload);
+                // --- Update Item API Call ---
+                response = await fetch(`${API_BASE_URL}/inventory/${itemId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemPayload)
+                });
+                successMessage = 'Item updated successfully!';
+            } else {
+                console.log("SAVING New Item:", itemPayload);
+                // --- Create Item API Call ---
+                response = await fetch(`${API_BASE_URL}/inventory`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(itemPayload)
+                });
+                successMessage = 'Item added successfully!';
+            }
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.message || `Failed to ${isEditing ? 'update' : 'save'} item.`);
+            }
+
+            console.log(successMessage);
+            navigate('/inventory'); // Navigate back only on success
+
+        } catch (err) {
+            console.error(`Error ${isEditing ? 'updating' : 'saving'} item:`, err);
+            setError(err.message); // Display error on the form page
+        } finally {
+            setIsLoading(false); // Hide loading state
+        }
+    };
+
+    saveItem(); // Call the async function
   };
 
   const handleCancel = () => {

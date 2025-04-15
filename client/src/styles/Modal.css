@@ -38,10 +38,86 @@
   line-height: 1.6;
 }
 
+/* NEW: Modal Header Styles */
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px; /* Space below header */
+    border-bottom: 1px solid #4a5568;
+    padding-bottom: 10px;
+}
+
+.modal-header h4 {
+    margin: 0; /* Reset margin */
+    border: none; /* Remove duplicate border */
+    padding: 0; /* Reset padding */
+}
+
+.modal-close-button {
+    background: none;
+    border: none;
+    color: #a0aec0; /* Light grey */
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0; /* Adjust as needed */
+    line-height: 1;
+}
+
+.modal-close-button:hover {
+    color: #fff;
+}
+
+/* NEW: Modal Body Styles */
+.modal-body {
+    /* Add padding or margin if needed, depending on content */
+    margin-bottom: 20px; /* Space before actions */
+}
+
+/* Styles for form elements specifically within the modal */
+.modal-body .form-field {
+    margin-bottom: 15px; /* Space between fields */
+}
+
+.modal-body label {
+    display: block; /* Label on its own line */
+    margin-bottom: 5px;
+    color: #cbd5e0; /* Slightly lighter grey */
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+.modal-body input[type="text"],
+.modal-body input[type="number"],
+.modal-body input[type="email"],
+.modal-body input[type="password"],
+.modal-body select,
+.modal-body textarea {
+    width: 100%; /* Full width within modal padding */
+    padding: 10px;
+    background-color: #1a202c; /* Darker background for contrast */
+    border: 1px solid #4a5568; /* Medium Gray border */
+    color: #e2e8f0; /* Light text color */
+    border-radius: 4px;
+    font-size: 1rem;
+    box-sizing: border-box; /* Include padding in width */
+}
+
+.modal-body input::placeholder,
+.modal-body textarea::placeholder {
+    color: #718096; /* Placeholder text color */
+}
+
+.modal-body .error-message {
+    color: #e53e3e; /* Red */
+    font-size: 0.9rem;
+    margin-top: 10px;
+}
+
 .modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
 }
 
 /* Use general button styles defined elsewhere if available */

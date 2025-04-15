@@ -57,7 +57,7 @@
 .employee-card-header {
     display: flex;
     justify-content: space-between;
-    align-items: flex-start; /* Align top edges */
+    align-items: center; /* Changed from flex-start to center */
     margin-bottom: 15px;
     border-bottom: 1px solid #4a5568;
     padding-bottom: 10px;
@@ -72,7 +72,7 @@
 
 .header-right {
     display: flex;
-    align-items: flex-start; /* Align buttons/menu to top */
+    align-items: center; /* Changed from flex-start to center */
     gap: 10px; /* Space between approve/deny buttons and menu */
 }
 
@@ -215,4 +215,32 @@
 .timesheet-approval-actions {
     display: flex;
     gap: 8px; /* Space between approve/deny */
+}
+
+/* Style the action menu button (three dots) */
+.menu-dots-button {
+    background: none; 
+    border: none; 
+    /* Adjust padding to visually match other small buttons */
+    padding: 6px 0.00005px; 
+    margin: 0; /* Ensure no extra margins */
+    color: #a0aec0; /* Slightly lighter grey for visibility */
+    cursor: pointer;
+    display: inline-flex; /* Align icon inside */
+    align-items: center; 
+    justify-content: center;
+    line-height: 1; /* Prevent extra vertical space */
+    border-radius: 4px; 
+    /* vertical-align: middle; /* Should not be needed with align-items: center on parent */
+}
+
+.menu-dots-button svg {
+    display: block; /* Prevents potential extra space below icon */
+    width: 1em; 
+    height: 1em;
+}
+
+/* Optional: Hover effect for the dots button */
+.menu-dots-button:hover {
+    background-color: rgba(255, 255, 255, 0.1); 
 } 
