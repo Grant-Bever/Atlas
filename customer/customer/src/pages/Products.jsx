@@ -165,30 +165,36 @@ function Products() {
           ) : products.length === 0 ? (
             <p>No products available in this category.</p>
           ) : (
-            products.map(product => (
-              <div key={product.id} className="product-card">
-                <h3>{product.name}</h3>
-                <p className="price">${product.price_per_pound.toFixed(2)} / lb</p>
-                <p className="stock">Available: {product.quantity} lbs</p>
-                <div className="product-actions">
-                  <input 
-                    type="number" 
-                    min="1" 
-                    max={product.quantity} 
-                    value={quantities[product.id] || 1}
-                    onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
-                    className="quantity-input"
-                  />
-                  <button 
-                    className="add-to-cart-btn"
-                    onClick={() => addToCart(product)}
-                    disabled={product.quantity < 1}
-                  >
-                    Add to Cart
-                  </button>
+            products.map(product => {
+              // Safely parse the price, defaulting to 0 if invalid/missing
+              const price = parseFloat(product.price_per_pound);
+              const displayPrice = !isNaN(price) ? price.toFixed(2) : '0.00';
+
+              return (
+                <div key={product.id} className="product-card">
+                  <h3>{product.name}</h3>
+                  <p className="price">${displayPrice} / lb</p>
+                  <p className="stock">Available: {product.quantity} lbs</p>
+                  <div className="product-actions">
+                    <input 
+                      type="number" 
+                      min="1" 
+                      max={product.quantity} 
+                      value={quantities[product.id] || 1}
+                      onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
+                      className="quantity-input"
+                    />
+                    <button 
+                      className="add-to-cart-btn button button-primary"
+                      onClick={() => addToCart(product)}
+                      disabled={product.quantity < 1}
+                    >
+                      Add to Cart
+                    </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>

@@ -2,23 +2,25 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
-  font-family: Arial, sans-serif;
+  background-color: #1a202c;
+  color: #e2e8f0;
 }
 
 .customer-header {
-  background-color: #2d3748;
-  color: white;
+  background-color: #1a202c;
+  color: #e2e8f0;
   padding: 1rem 2rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  border-bottom: 1px solid #4a5568;
 }
 
 .logo h1 {
   margin: 0;
   font-size: 1.8rem;
   font-weight: bold;
+  color: #e2e8f0;
 }
 
 .customer-nav {
@@ -27,7 +29,7 @@
 }
 
 .customer-nav a {
-  color: white;
+  color: #cbd5e0;
   text-decoration: none;
   padding: 0.5rem 0;
   font-weight: 500;
@@ -35,7 +37,7 @@
 }
 
 .customer-nav a:hover {
-  color: #a0aec0;
+  color: #ffffff;
 }
 
 .cart-link {
@@ -47,15 +49,57 @@
 .customer-main {
   flex: 1;
   padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
   width: 100%;
 }
 
 .customer-footer {
-  background-color: #2d3748;
-  color: white;
+  background-color: #1a202c;
+  color: #a0aec0;
   text-align: center;
   padding: 1rem;
   margin-top: auto;
+  border-top: 1px solid #4a5568;
+}
+
+/* --- Base Button Styles (Inspired by Manager Theme) --- */
+.button {
+  display: inline-block;
+  padding: 10px 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+  text-decoration: none; /* For link buttons */
+}
+
+.button-primary {
+  background-color: #3182ce; /* Blue */
+  color: #ffffff;
+  border-color: #3182ce;
+}
+
+.button-primary:hover {
+  background-color: #2b6cb0; /* Darker Blue */
+  border-color: #2b6cb0;
+}
+
+.button-secondary {
+  background-color: #4a5568; /* Medium Gray */
+  color: #e2e8f0;
+  border-color: #4a5568;
+}
+
+.button-secondary:hover {
+  background-color: #2d3748; /* Darker Gray */
+  border-color: #2d3748;
+}
+
+.button:disabled {
+  background-color: #2d3748; /* Darker Gray */
+  color: #718096; /* Muted Gray */
+  border-color: #2d3748;
+  cursor: not-allowed;
 }

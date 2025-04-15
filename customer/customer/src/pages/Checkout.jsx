@@ -155,7 +155,7 @@ function Checkout() {
               <div className="checkout-actions">
                 <button 
                   type="button" 
-                  className="back-btn"
+                  className="button button-secondary"
                   onClick={() => navigate('/cart')}
                   disabled={isSubmitting}
                 >
@@ -163,7 +163,7 @@ function Checkout() {
                 </button>
                 <button 
                   type="submit" 
-                  className="place-order-btn"
+                  className="button button-primary"
                   disabled={isSubmitting}
                 >
                   {isSubmitting ? 'Processing...' : 'Place Order'}

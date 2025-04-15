@@ -58,52 +58,63 @@ function Cart() {
         {cartItems.length === 0 ? (
           <div className="empty-cart">
             <p>Your cart is empty.</p>
-            <Link to="/" className="continue-shopping">Continue Shopping</Link>
+            <Link to="/" className="button button-secondary">Continue Shopping</Link>
           </div>
         ) : (
           <>
-            <div className="cart-items">
-              <div className="cart-header">
-                <span>Product</span>
-                <span>Price/lb</span>
-                <span>Quantity</span>
-                <span>Total</span>
-                <span>Actions</span>
-              </div>
-              
-              {cartItems.map(item => (
-                <div key={item.id} className="cart-item">
-                  <span className="item-name">{item.name}</span>
-                  <span className="item-price">${item.price_per_pound.toFixed(2)}</span>
-                  <span className="item-quantity">
-                    <button 
-                      onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                      disabled={item.quantity <= 1}
-                    >
-                      -
-                    </button>
-                    <input 
-                      type="number" 
-                      min="1" 
-                      value={item.quantity} 
-                      onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
-                    />
-                    <button onClick={() => updateQuantity(item.id, item.quantity + 1)}>+</button>
-                  </span>
-                  <span className="item-total">
-                    ${(item.price_per_pound * item.quantity).toFixed(2)}
-                  </span>
-                  <span className="item-actions">
-                    <button 
-                      className="remove-btn"
-                      onClick={() => removeItem(item.id)}
-                    >
-                      Remove
-                    </button>
-                  </span>
-                </div>
-              ))}
-            </div>
+            <table className="cart-table">
+              <thead>
+                <tr>
+                  <th>Product</th>
+                  <th>Price/lb</th>
+                  <th>Quantity</th>
+                  <th>Total</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {cartItems.map(item => (
+                  <tr key={item.id}>
+                    <td className="item-name">{item.name}</td>
+                    <td className="item-price">${item.price_per_pound.toFixed(2)}</td>
+                    <td className="item-quantity">
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        disabled={item.quantity <= 1}
+                        aria-label="Decrease quantity"
+                      >
+                        -
+                      </button>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        value={item.quantity} 
+                        onChange={(e) => updateQuantity(item.id, parseInt(e.target.value))}
+                        aria-label={`Quantity for ${item.name}`}
+                      />
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        aria-label="Increase quantity"
+                      >
+                        +
+                      </button>
+                    </td>
+                    <td className="item-total">
+                      ${(item.price_per_pound * item.quantity).toFixed(2)}
+                    </td>
+                    <td className="item-actions">
+                      <button 
+                        className="button button-danger"
+                        onClick={() => removeItem(item.id)}
+                        aria-label={`Remove ${item.name}`}
+                      >
+                        Remove
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
             
             <div className="cart-summary">
               <div className="cart-total">
@@ -112,8 +123,8 @@ function Cart() {
               </div>
               
               <div className="cart-actions">
-                <Link to="/" className="continue-shopping">Continue Shopping</Link>
-                <Link to="/checkout" className="checkout-btn">Proceed to Checkout</Link>
+                <Link to="/" className="button button-secondary">Continue Shopping</Link>
+                <Link to="/checkout" className="button button-primary">Proceed to Checkout</Link>
               </div>
             </div>
           </>
