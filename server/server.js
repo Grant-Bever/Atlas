@@ -5,6 +5,7 @@ const db = require('./models'); // Imports models/index.js - initializes Sequeli
 
 // Import routes
 const orderRoutes = require('./routes/orderRoutes');
+const totalsRoutes = require('./routes/totalsRoutes'); // <-- Add totals routes
 // Add other route imports here as you create them (e.g., employeeRoutes, inventoryRoutes)
 
 const app = express();
@@ -16,6 +17,7 @@ app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
 // --- Mount Routes ---
 app.use('/api/orders', orderRoutes);
+app.use('/api/totals', totalsRoutes); // <-- Mount totals routes
 // app.use('/api/employees', employeeRoutes); // Example for other routes
 // app.use('/api/inventory', inventoryRoutes); // Example for other routes
 // Add other routes here...
