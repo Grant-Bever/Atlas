@@ -52,13 +52,13 @@ CREATE TABLE Inventory (
     FOREIGN KEY (manager_id) REFERENCES Managers(id) ON DELETE SET NULL -- Or ON DELETE CASCADE
 );
 
--- Customers Table
+-- Customers Table (Updated)
 CREATE TABLE Customers (
     id SERIAL PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    phone VARCHAR(20),
-    password VARCHAR(255) NOT NULL -- Consider hashing passwords
+    email VARCHAR(255) UNIQUE, -- Allows NULL, but non-NULL values must be unique
+    phone VARCHAR(20) NOT NULL, -- Phone is now required at DB level
+    password VARCHAR(255) -- Allows NULL for password initially
 );
 
 -- Invoices Table

@@ -1,60 +1,51 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Added useNavigate
+import { Link, useNavigate } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Import Modal styles
 import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare, FaHistory } from 'react-icons/fa';
 
-// Initial Sample Data (will be moved to state)
-const initialSampleOrders = [
-  {
-    id: 112,
-    customer: 'Michoacano',
-    date: '6/18/2024',
-    total: 457.00,
-    items: [
-      { quantity: 5, description: 'Ribeye Steak', weight: 15, price: 8.99, amount: 134.85 },
-      { quantity: 8, description: 'Pork Chops', weight: 12, price: 3.50, amount: 42.00 },
-      { quantity: 12, description: 'Chicken Breasts', weight: 20, price: 2.99, amount: 59.80 },
-      { quantity: 7, description: 'Ground Beef', weight: 14, price: 4.99, amount: 69.86 },
-      { quantity: 3, description: 'Salmon Fillets', weight: 8, price: 9.99, amount: 79.92 },
-      { quantity: 9, description: 'Turkey Legs', weight: 18, price: 1.79, amount: 32.22 },
-      { quantity: 4, description: 'Lamb Chops', weight: 10, price: 12.99, amount: 129.90 }, // Note: Amounts might not exactly match image due to calculation
-      { quantity: 6, description: 'Pork Belly', weight: 15, price: 5.99, amount: 89.85 },
-      { quantity: 11, description: 'Bacon', weight: 5, price: 7.99, amount: 43.95 },
-      { quantity: 10, description: 'Bratwurst', weight: 10, price: 4.50, amount: 45.00 },
-    ]
-  },
-  {
-    id: 113, customer: 'Mosner', date: '6/19/2024', total: 160.00,
-    items: [
-      { quantity: 10, description: 'Chicken Wings', weight: 10, price: 2.50, amount: 25.00 },
-      { quantity: 4, description: 'Sirloin Steak', weight: 10, price: 7.50, amount: 75.00 },
-      { quantity: 6, description: 'Sausages', weight: 6, price: 5.00, amount: 60.00 }, // Example data
-    ]
-  },
-  {
-    id: 116, customer: 'Michoacano', date: '6/19/2024', total: 160.00,
-    items: [
-      { quantity: 5, description: 'Ground Beef', weight: 10, price: 4.99, amount: 49.90 },
-      { quantity: 7, description: 'Pork Shoulder', weight: 15, price: 2.89, amount: 110.10 }, // Example data
-    ]
-  },
-  // Add items for other orders as needed...
-  { id: 117, customer: 'Carniceria', date: '6/19/2024', total: 160.00, items: [] },
-  { id: 118, customer: 'Tomoe', date: '6/19/2024', total: 160.00, items: [] },
-  { id: 119, customer: 'Regal', date: '6/19/2024', total: 160.00, items: [] },
-  { id: 120, customer: 'Mosner', date: '6/19/2024', total: 160.00, items: [] },
-];
+// Base URL for the API (Consider moving this to a config file)
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
 function ManagerActiveOrders() {
   const navigate = useNavigate();
-  const [orders, setOrders] = useState(initialSampleOrders); // Manage orders in state
+  const [orders, setOrders] = useState([]); // Initialize with empty array
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState(null); // Add error state
   const [expandedRows, setExpandedRows] = useState(new Set());
   const [openMenuId, setOpenMenuId] = useState(null); // Track which menu is open
-  const [confirmModalState, setConfirmModalState] = useState({ isOpen: false, orderId: null });
+  const [confirmModalState, setConfirmModalState] = useState({ isOpen: false, orderId: null, type: null }); // Added type for modal reuse
 
-  // --- Row Expansion --- 
+  // --- Fetch Active Orders ---
+  useEffect(() => {
+    const fetchActiveOrders = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await fetch(`${API_BASE_URL}/orders/active`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        // Ensure items is always an array
+        const ordersWithItemsArray = data.map(order => ({
+            ...order,
+            items: order.items || []
+        }));
+        setOrders(ordersWithItemsArray);
+      } catch (e) {
+        console.error("Failed to fetch active orders:", e);
+        setError("Failed to load active orders. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchActiveOrders();
+  }, []); // Empty dependency array means run once on mount
+
+  // --- Row Expansion ---
   const handleRowClick = (orderId) => {
      // Close menu if clicking on a row
     if (openMenuId !== null) {
@@ -71,20 +62,21 @@ function ManagerActiveOrders() {
     });
   };
 
-  // --- Actions Menu --- 
+  // --- Actions Menu ---
   const handleMenuToggle = (e, orderId) => {
     e.stopPropagation(); // Prevent row click when clicking dots
     setOpenMenuId(prevId => (prevId === orderId ? null : orderId));
     // Close expanded row if opening menu for it
     if (expandedRows.has(orderId) && openMenuId !== orderId) {
-        handleRowClick(orderId); 
+        handleRowClick(orderId);
     }
   };
 
   // Close menu if clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (openMenuId !== null && !event.target.closest('.action-menu-container')) {
+      // Check if the click is outside the menu container
+      if (openMenuId !== null && !event.target.closest(`.action-menu-container[data-order-id="${openMenuId}"]`)) {
         setOpenMenuId(null);
       }
     };
@@ -94,47 +86,101 @@ function ManagerActiveOrders() {
     };
   }, [openMenuId]);
 
-  // --- Action Handlers --- 
+  // --- Action Handlers ---
   const handleEdit = (e, orderId) => {
     e.stopPropagation();
     setOpenMenuId(null); // Close menu
-    navigate(`/orders/edit/${orderId}`);
+    // TODO: Navigate to an edit page - this needs to be created
+    // For now, maybe log or disable
+    console.log(`Navigate to edit order: ${orderId}`);
+    // navigate(`/orders/edit/${orderId}`); // Uncomment when edit page exists
   };
 
-  const handleDelete = (e, orderId) => {
+  const handleDeleteClick = (e, orderId) => {
     e.stopPropagation();
-    // Update state to remove the order (replace with API call later)
-    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
     setOpenMenuId(null); // Close menu
-    // Also remove from expanded rows if it was expanded
-    setExpandedRows(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(orderId);
-        return newSet;
-    });
-    console.log(`Delete order: ${orderId}`);
+    setConfirmModalState({ isOpen: true, orderId: orderId, type: 'delete' }); // Open modal for deletion
   };
 
   const handleMarkCompleteClick = (e, orderId) => {
     e.stopPropagation();
     setOpenMenuId(null); // Close menu
-    setConfirmModalState({ isOpen: true, orderId: orderId }); // Open modal
+    setConfirmModalState({ isOpen: true, orderId: orderId, type: 'complete' }); // Open modal for completion
   };
 
-  // --- Modal Handlers --- 
-  const handleConfirmComplete = () => {
-    const orderId = confirmModalState.orderId;
-    console.log(`Order ${orderId} marked complete. Notify customer.`);
-    // TODO: API call to mark complete & notify
-    // For now, just remove from active orders list visually
-    setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
-    setConfirmModalState({ isOpen: false, orderId: null }); // Close modal
+  // --- Modal Handlers ---
+  const handleConfirmAction = async () => {
+    const { orderId, type } = confirmModalState;
+    if (!orderId || !type) return;
+
+    // Close modal immediately
+    setConfirmModalState({ isOpen: false, orderId: null, type: null });
+
+    try {
+      let response;
+      if (type === 'delete') {
+        console.log(`Deleting order: ${orderId}`);
+        response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+          method: 'DELETE',
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to delete order ${orderId}. Status: ${response.status}`);
+        }
+        // Remove from state on successful deletion
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+        // Also remove from expanded rows if it was expanded
+        setExpandedRows(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(orderId);
+            return newSet;
+        });
+
+      } else if (type === 'complete') {
+        console.log(`Marking order ${orderId} complete.`);
+        response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ completed: true }), // Send update data
+        });
+        if (!response.ok) {
+          throw new Error(`Failed to mark order ${orderId} as complete. Status: ${response.status}`);
+        }
+        // Remove from active orders list visually
+        setOrders(prevOrders => prevOrders.filter(order => order.id !== orderId));
+         // Also remove from expanded rows
+        setExpandedRows(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(orderId);
+            return newSet;
+        });
+      }
+    } catch (err) {
+      console.error(`Error during ${type} action for order ${orderId}:`, err);
+      setError(`Failed to ${type} order ${orderId}. Please try again.`); // Display error to user
+      // Optionally refetch data here if needed to reset state on error
+    }
   };
 
-  const handleCancelComplete = () => {
-    setConfirmModalState({ isOpen: false, orderId: null }); // Close modal
+  const handleCancelAction = () => {
+    setConfirmModalState({ isOpen: false, orderId: null, type: null }); // Close modal
   };
 
+  // --- Render Logic ---
+  if (loading) {
+    return <ManagerLayout pageTitle="Active Orders"><div className="loading-indicator">Loading active orders...</div></ManagerLayout>;
+  }
+
+  // Display error message if loading fails
+   if (error) {
+      return (
+          <ManagerLayout pageTitle="Active Orders">
+              <div className="error-message">{error}</div>
+              {/* Optionally add a retry button */}
+          </ManagerLayout>
+      );
+   }
 
   return (
     <ManagerLayout pageTitle="Active Orders">
@@ -148,12 +194,17 @@ function ManagerActiveOrders() {
             </Link>
         </div>
         <div className="page-actions-right">
+            {/* TODO: Implement Search */}
             <div className="search-bar">
                 <input type="text" placeholder="Search Active Orders..." />
                 <button className="icon-button"><FaSearch /></button>
             </div>
         </div>
       </div>
+
+      {/* Display general error messages here if needed */}
+       {error && !loading && <div className="error-message" style={{ marginBottom: '15px' }}>{error}</div>}
+
 
       <table className="data-table main-table">
         <thead>
@@ -174,88 +225,107 @@ function ManagerActiveOrders() {
             return (
               <React.Fragment key={order.id}>
                 {/* Main Order Row */}
+                {/* Add data-order-id to the container for click outside detection */}
                 <tr onClick={() => handleRowClick(order.id)} className={`clickable-row ${isExpanded ? 'expanded' : ''}`}>
                   <td className="expand-icon-cell">
-                    {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+                    {order.items && order.items.length > 0 ? (isExpanded ? <FaChevronDown /> : <FaChevronRight />) : ''} {/* Only show icon if items exist */}
                   </td>
                   <td>{order.id}</td>
-                  <td>{order.customer}</td>
-                  <td>{order.date}</td>
-                  <td>${order.total.toFixed(2)}</td>
+                  {/* Use customer name from the included association */}
+                  <td>{order.customer ? order.customer.name : 'N/A'}</td>
+                  {/* Format date if needed */}
+                  <td>{new Date(order.date).toLocaleDateString()}</td>
+                  <td>${parseFloat(order.total || 0).toFixed(2)}</td>
                   {/* Actions Cell */}
-                  <td className="action-cell action-menu-container">
-                    <button onClick={(e) => handleMenuToggle(e, order.id)} className="icon-button menu-dots-button">
+                  {/* Add data-order-id here too */}
+                  <td className="action-cell action-menu-container" data-order-id={order.id}>
+                     <button onClick={(e) => handleMenuToggle(e, order.id)} className="icon-button menu-dots-button">
                       <FaEllipsisV />
                     </button>
                     {/* Action Menu Dropdown */}
                     {isMenuOpen && (
                       <div className="action-menu">
-                        <button onClick={(e) => handleEdit(e, order.id)}><FaEdit /> Edit</button>
-                        <button onClick={(e) => handleDelete(e, order.id)} className="danger"><FaTrashAlt /> Delete</button>
-                        <button onClick={(e) => handleMarkCompleteClick(e, order.id)}><FaCheckSquare /> Mark Complete</button> {/* Example icon */} 
+                        <button onClick={(e) => handleEdit(e, order.id)} disabled><FaEdit /> Edit</button> {/* Disabled for now */}
+                        <button onClick={(e) => handleDeleteClick(e, order.id)} className="danger"><FaTrashAlt /> Delete</button>
+                        <button onClick={(e) => handleMarkCompleteClick(e, order.id)}><FaCheckSquare /> Mark Complete</button>
                       </div>
                     )}
                   </td>
                 </tr>
 
                 {/* Collapsible Row with Nested Table */}
-                {isExpanded && (
+                {isExpanded && order.items && order.items.length > 0 && (
                    <tr className="collapsible-row">
-                    <td></td> {/* Spacer for expand icon */} 
-                    <td colSpan="5"> {/* Span across remaining cols + actions col */} 
+                    <td></td> {/* Spacer for expand icon */}
+                    <td colSpan="5"> {/* Span across remaining cols + actions col */}
                       <div className="nested-table-container">
                         <table className="data-table nested-table">
-                          {/* ... nested table thead/tbody ... */}
                           <thead>
                              <tr>
                                <th>Quantity</th>
-                               <th>Description</th>
+                               <th>Item</th> {/* Changed from Description */}
                                <th>Weight</th>
                                <th>Price</th>
                                <th>Amount</th>
+                               <th>Notes</th> {/* Added Notes */}
                              </tr>
                           </thead>
                           <tbody>
-                          {order.items.length > 0 ? (
-                             order.items.map((item, index) => (
-                             <tr key={`${order.id}-item-${index}`}>
+                          {order.items.map((item, index) => (
+                             <tr key={`${order.id}-item-${item.id || index}`}> {/* Use item.id if available */}
                                <td>{item.quantity}</td>
-                               <td>{item.description}</td>
-                               <td>{item.weight}</td>
-                               <td>${item.price.toFixed(2)}</td>
-                               <td>${item.amount.toFixed(2)}</td>
+                               <td>{item.item}</td> {/* Use item field */}
+                               <td>{item.weight ? item.weight : '-'}</td>
+                               <td>${parseFloat(item.price || 0).toFixed(2)}</td>
+                               <td>${parseFloat(item.amount || 0).toFixed(2)}</td>
+                               <td>{item.notes || '-'}</td> {/* Display notes */}
                              </tr>
-                              ))
-                           ) : (
-                              <tr>
-                                <td colSpan="5" style={{ textAlign: 'center', fontStyle: 'italic' }}>No items in this order.</td>
-                               </tr>
-                            )}
+                              ))}
                            </tbody>
                         </table>
                       </div>
                     </td>
                   </tr>
                 )}
+                 {/* Handle case where row expanded but no items */}
+                 {isExpanded && (!order.items || order.items.length === 0) && (
+                     <tr className="collapsible-row no-items-row">
+                         <td></td>
+                         <td colSpan="5" style={{ textAlign: 'center', fontStyle: 'italic', padding: '10px' }}>
+                             No items associated with this order.
+                         </td>
+                     </tr>
+                 )}
               </React.Fragment>
             );
           }) : (
              <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No active orders found.</td>
              </tr>
-          )} 
+          )}
         </tbody>
       </table>
 
       {/* Confirmation Modal */}
       {confirmModalState.isOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h4>Confirm Order Completion</h4>
-            <p>Are you sure you want to mark order #{confirmModalState.orderId} as complete? This will notify the customer.</p>
+        <div className="modal-backdrop">
+          <div className="modal">
+            <h2>Confirm Action</h2>
+            <p>
+              {confirmModalState.type === 'delete'
+                ? `Are you sure you want to delete Invoice #${confirmModalState.orderId}? This action cannot be undone.`
+                : `Are you sure you want to mark Invoice #${confirmModalState.orderId} as complete?`}
+            </p>
             <div className="modal-actions">
-              <button onClick={handleCancelComplete} className="button button-secondary">Cancel</button>
-              <button onClick={handleConfirmComplete} className="button button-primary">Confirm</button>
+              <button onClick={handleCancelAction} className="button button-secondary">
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmAction}
+                className={`button ${confirmModalState.type === 'delete' ? 'button-danger' : 'button-primary'}`}
+              >
+                {confirmModalState.type === 'delete' ? 'Delete Invoice' : 'Mark Complete'}
+              </button>
             </div>
           </div>
         </div>

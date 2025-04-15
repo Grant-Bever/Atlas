@@ -1,0 +1,35 @@
+const fs = require('fs');
+const path = require('path');
+const Sequelize = require('sequelize');
+const sequelize = require('../config/database'); // Import the configured sequelize instance
+
+const db = {};
+
+// Read all files in the current directory (models)
+fs.readdirSync(__dirname)
+  .filter(file => {
+    // Filter out non-JS files, the index file itself, and test files
+    return (
+      file.indexOf('.') !== 0 &&
+      file !== path.basename(__filename) &&
+      file.slice(-3) === '.js' &&
+      file.indexOf('.test.js') === -1
+    );
+  })
+  .forEach(file => {
+    // Import each model file and add it to the db object
+    const model = require(path.join(__dirname, file))(sequelize, Sequelize.DataTypes);
+    db[model.name] = model;
+  });
+
+// Set up associations between models
+Object.keys(db).forEach(modelName => {
+  if (db[modelName].associate) {
+    db[modelName].associate(db);
+  }
+});
+
+db.sequelize = sequelize; // Add the sequelize instance to the db object
+db.Sequelize = Sequelize; // Add the Sequelize library itself
+
+module.exports = db; 

@@ -64,3 +64,27 @@ Lets work on the @ManagerTotals.jsx page. This page is supposed to hold the week
 Manager - Inventory (Christian):
 
 Okay, let's focus on the @ManagerInventory.jsx page now. The first image given is a draft of what the main page there should look like. Each row is a dropdown menu for a bigger category (Beef, Poultry, Pork, Etc.). These bigger categories can be made by the user when adding a new item (more on that later). When the category name is clicked, it opens up a dropdown menu that holds the different items that belongs to that category. As a small card, it should hold the name of the item and under that the quantity that is available. This should be true for each category. The card should have three vertical dots in the corner that allows the user to edit,  delete, or add to the item. Editing the item should bring the user back to the original page that allowed them to add the item where they can see the data members such as the name, quantity, price/pound, and item type. The  information that was originally inputted should show back up when the edit button is clicked. The second image provided shows the page for adding an item to the inventory. The user can input a name (anything as a string), select an item type (our bigger category such as beef, poultry, etc.), the quantity to be added, and the price per pound. Under this little form , there should be two buttons that allows the user to confirm or cancel. For the item type, this is a drop down list of categories that can be selected, not a text box. Out of the ones that currently exist, the user should also have the option to make a new category at anytime by having a "+ Add Category" button under the last available category from the dropdown. All the other inputs are text boxes. Use best practices when coding and keep the styling consistent with the current app. 
+
+App Database Design (Christian):
+
+Define my database schema for this application. The databse to be used is Postgres SQL. Here is the ER diagram:
+
+Database Tables
+- Employees: id, email, phone, name, password, hourly_rate
+- Workdays: id, clock_in, clock_out, date, daily pay (FK: employee_id, timesheet_id)
+- Timesheets: id, status, start_date, end_date (FK: manager_id)
+- Manager: id, name, email, phone, password
+- Inventory: id, price_per_pound, name, category, quantity, price_per_box (FK: manager_id)
+- Customer: id, name, email, phone, password
+- Invoices: id, total, date, checked_out, paid, completed (FK: customer_id)
+- Invoice_Items: id, quantity, notes, amount, price, weight, item (FK: invoice_id)
+
+Database Relationships
+- Employees-work-Workdays: 1:M
+- Workdays-record-Timesheets: M:1
+- Timesheets-approve-Managers: M:1
+- Managers-manage-Inventory: 1:M
+- Invoices-make-Customers: M:1
+- Invoices-hold-Invoice_Items: 1:M
+
+Define any code for the database within a folder called "database" that should be stored within the /server folder within the codebase. Make this folder if it does not already exist. Follow best practices.
