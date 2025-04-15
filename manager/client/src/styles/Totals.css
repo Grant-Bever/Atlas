@@ -1,0 +1,90 @@
+/* Totals.css */
+
+.totals-header {
+  align-items: center; /* Vertically align items */
+}
+
+.gross-revenue {
+  background-color: #1a202c; /* Very Dark Gray-Blue */
+  color: #48bb78; /* Green */
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: 1px solid #4a5568;
+}
+
+.gross-revenue span:first-child {
+  color: #a0aec0; /* Lighter Gray for label */
+  margin-right: 10px;
+  font-size: 1rem;
+}
+
+/* Grid for Customer Cards */
+.totals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); /* Responsive grid */
+  gap: 20px;
+  margin-top: 20px;
+}
+
+/* Customer Card Styling */
+.customer-total-card {
+  background-color: #2d3748; /* Dark Gray-Blue */
+  border: 1px solid #4a5568; /* Medium Gray */
+  border-radius: 8px;
+  padding: 20px;
+  color: #e2e8f0; /* Light Gray */
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-total-card h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  color: #fff;
+  border-bottom: 1px solid #4a5568;
+  padding-bottom: 10px;
+  font-size: 1.2rem;
+}
+
+.daily-totals-list {
+  flex-grow: 1; /* Allow list to take up space */
+  margin-bottom: 15px;
+}
+
+.daily-total-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0; /* Add vertical padding */
+  border-bottom: 1px solid #4a5568; /* Subtle separator */
+  font-size: 0.95rem;
+}
+
+.daily-total-item:last-child {
+  border-bottom: none; /* Remove border from last item */
+}
+
+.daily-total-item span:first-child {
+  color: #a0aec0; /* Lighter gray for day name */
+}
+
+.daily-total-item span:last-child {
+  font-weight: bold;
+}
+
+/* Weekly Total at Card Bottom */
+.card-weekly-total {
+  margin-top: auto; /* Push to bottom */
+  padding-top: 15px;
+  border-top: 1px solid #718096; /* Stronger separator */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+.card-weekly-total span:first-child {
+  color: #cbd5e0;
+} 

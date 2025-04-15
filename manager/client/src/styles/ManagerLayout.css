@@ -1,0 +1,43 @@
+/* Styles for the main layout container */
+.manager-layout {
+  display: flex;
+  background-color: #1a202c; /* Very Dark Gray-Blue */
+  min-height: 100vh;
+  color: #e2e8f0; /* Light Gray for text */
+}
+
+/* Main content area adjustments */
+.main-content {
+  margin-left: 250px; /* Same width as the sidebar */
+  flex-grow: 1;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.main-header {
+  display: flex;
+  justify-content: space-between; /* Pushes Title left, Date right */
+  align-items: center; /* Vertically center title and date */
+  padding-bottom: 20px;
+  border-bottom: 1px solid #4a5568; /* Medium Gray */
+  margin-bottom: 20px;
+}
+
+/* Style for the page title within the header */
+.page-title-header {
+    margin: 0; /* Remove default heading margin */
+    font-size: 1.5rem; /* Adjust size as needed */
+    color: #e2e8f0; /* Light Gray */
+}
+
+.current-date {
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+/* Container for the actual page content (table, forms, etc.) */
+.page-content {
+  flex-grow: 1;
+  /* Add any specific styling for the content area here if needed */
+} 

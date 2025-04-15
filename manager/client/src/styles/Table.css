@@ -1,0 +1,261 @@
+/* Shared Table Styles */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: #2d3748; /* Dark Gray-Blue */
+  color: #e2e8f0; /* Light Gray */
+}
+
+.main-table {
+  margin-top: 20px; /* Add margin only to the main table */
+}
+
+.data-table th,
+.data-table td {
+  padding: 12px 15px;
+  border-bottom: 1px solid #4a5568; /* Medium Gray */
+  text-align: left;
+  vertical-align: middle; /* Align content vertically */
+}
+
+.data-table thead th {
+  background-color: #1a202c; /* Very Dark Gray-Blue */
+  color: #a0aec0; /* Lighter Gray for headers */
+  font-weight: bold;
+}
+
+.data-table tbody tr {
+  transition: background-color 0.2s ease-in-out;
+}
+
+/* Apply hover only to the main rows that are clickable */
+.data-table.main-table > tbody > tr.clickable-row:hover {
+  background-color: #4a5568; /* Medium Gray on hover */
+  cursor: pointer;
+}
+
+/* Clickable Row Styling */
+.clickable-row {
+  /* Optional: Add other styles to indicate clickability */
+}
+
+.expand-icon-cell {
+  width: 30px; /* Match header width */
+  text-align: center;
+  padding-right: 5px; /* Give icon some space */
+}
+
+/* Collapsible Row Styling */
+.collapsible-row td {
+  padding: 0; /* Remove padding from the cell containing the nested table */
+  border-bottom: 1px solid #4a5568; /* Ensure border matches */
+}
+
+/* Container for the nested table for better control */
+.nested-table-container {
+  padding: 15px 25px 15px 25px; /* Add some padding around the nested table */
+  background-color: #38445a; /* Slightly lighter background for nested area */
+}
+
+.nested-table {
+  background-color: #2d3748; /* Match main table background */
+  margin-bottom: 0; /* No margin below nested table */
+}
+
+.nested-table th {
+  color: #cbd5e0; /* Slightly lighter header text */
+  font-size: 0.9em;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+.nested-table td {
+  font-size: 0.9em;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+
+/* Remove bottom border from last row of nested table */
+.nested-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Style for header above the table */
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px; /* Add some space below the header */
+}
+
+.page-header h2 {
+  margin: 0;
+  color: #e2e8f0; /* Light Gray */
+}
+
+.header-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  color: #a0aec0; /* Lighter Gray for icons */
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 5px;
+  transition: color 0.2s ease-in-out;
+}
+
+.icon-button:hover {
+  color: #e2e8f0; /* Light Gray on hover */
+}
+
+/* Add relative positioning to the cell */
+.action-cell {
+  position: relative;
+  text-align: center;
+  padding: 0; /* Remove padding to allow precise button positioning */
+  width: 50px; /* Fixed width */
+}
+
+.menu-dots-button {
+  padding: 8px; /* Give some clickable area */
+}
+
+/* Actions Menu Dropdown */
+.action-menu-container {
+    position: relative; /* Needed for absolute positioning of menu */
+}
+
+.action-menu {
+  position: absolute;
+  right: 40px; /* Position menu slightly to the left of the dots */
+  top: 5px;    /* Position slightly below the top of the cell */
+  background-color: #4a5568; /* Medium Gray background */
+  border: 1px solid #718096; /* Lighter Gray border */
+  border-radius: 4px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  z-index: 10; /* Ensure menu is above table content */
+  min-width: 150px;
+  padding: 5px 0;
+}
+
+.action-menu button {
+  display: flex; /* Align icon and text */
+  align-items: center;
+  gap: 8px;
+  background: none;
+  border: none;
+  color: #e2e8f0; /* Light Gray text */
+  padding: 8px 15px;
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.action-menu button:hover {
+  background-color: #2d3748; /* Darker Gray-Blue on hover */
+}
+
+.action-menu button.danger {
+    color: #f56565; /* Red for danger actions */
+}
+
+.action-menu button.danger:hover {
+    color: #fff;
+    background-color: #c53030; /* Darker red background on hover */
+}
+
+/* Style for expanded row */
+.clickable-row.expanded {
+    /* Optional: Add a subtle background or border to indicate expansion */
+    background-color: #38445a;
+}
+
+/* Style for action bar below header */
+.page-actions-bar {
+    display: flex;
+    justify-content: space-between; /* Pushes left/right groups apart */
+    align-items: center;
+    padding: 10px 0; 
+    margin-bottom: 15px; 
+}
+
+/* Grouping for buttons on the left */
+.page-actions-left {
+    display: flex;
+    gap: 10px; /* Space between buttons */
+}
+
+/* Grouping for controls on the right */
+.page-actions-right {
+    display: flex;
+    gap: 10px; /* Space between elements if more are added */
+}
+
+/* Ensure buttons in the bar look consistent */
+.page-actions-bar .button {
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Space between icon and text in buttons */
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+    background-color: #1a202c;
+    border: 1px solid #4a5568;
+    border-radius: 4px;
+    padding: 0px 5px 0px 10px;
+}
+
+.search-bar input[type="text"] {
+    background: none;
+    border: none;
+    color: #e2e8f0;
+    padding: 8px 0;
+    outline: none;
+}
+
+.search-bar input::placeholder {
+    color: #718096;
+}
+
+.search-bar .icon-button {
+    /* Icons inherit styles, maybe adjust color/size */
+    padding: 8px;
+}
+
+/* Styles specific to totals page summary bar */
+.totals-summary-bar {
+     display: flex;
+     justify-content: flex-end; /* Push revenue to the right */
+     align-items: center;
+     margin-bottom: 20px;
+}
+
+/* Styles for sortable table headers */
+.sortable-header {
+    cursor: pointer;
+    user-select: none; /* Prevent text selection on click */
+}
+
+.sortable-header:hover {
+    background-color: rgba(255, 255, 255, 0.05); /* Slight highlight on hover */
+}
+
+.sort-icon {
+    display: inline-block;
+    margin-left: 6px;
+    color: #a0aec0; /* Lighter gray for default icon */
+    vertical-align: middle;
+    opacity: 0.6;
+}
+
+.sort-icon.active {
+    color: #fff; /* White for active icon */
+    opacity: 1;
+} 

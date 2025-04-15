@@ -1,0 +1,104 @@
+/* Inventory.css */
+
+.inventory-categories {
+  margin-top: 20px;
+}
+
+.inventory-category-section {
+  margin-bottom: 15px;
+  border: 1px solid #4a5568; /* Medium Gray */
+  border-radius: 6px;
+  background-color: #2d3748; /* Dark Gray-Blue */
+}
+
+.category-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 20px;
+  cursor: pointer;
+  background-color: #38445a; /* Slightly lighter background for header */
+  border-radius: 6px 6px 0 0; /* Round top corners */
+  transition: background-color 0.2s ease-in-out;
+}
+
+.category-header:hover {
+    background-color: #4a5568;
+}
+
+.category-header h3 {
+  margin: 0;
+  color: #e2e8f0;
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.category-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); /* Adjust minmax for card size */
+  gap: 15px;
+  padding: 20px;
+}
+
+/* Inventory Item Card Styling */
+.inventory-item-card {
+  background-color: #1a202c; /* Very Dark Gray-Blue */
+  border: 1px solid #4a5568;
+  border-radius: 4px;
+  padding: 10px 15px;
+  color: #e2e8f0;
+  position: relative; /* Needed for absolute positioning of menu button */
+  min-height: 80px; /* Ensure a minimum height */
+  display: flex;
+  flex-direction: column; /* Stack content and actions */
+  justify-content: space-between; /* Push content up, actions down (if needed) */
+}
+
+.item-card-content {
+    /* Takes available space */
+}
+
+.item-name {
+  font-weight: bold;
+  display: block; /* Ensure it takes its own line */
+  margin-bottom: 5px;
+  font-size: 1rem;
+}
+
+.item-quantity {
+  font-size: 0.9rem;
+  color: #a0aec0; /* Lighter gray */
+  display: block;
+}
+
+.item-action-menu-container {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+}
+
+/* Reuse icon-button styles, maybe make smaller */
+.item-menu-dots-button {
+    padding: 3px 6px; 
+    font-size: 0.9rem;
+    color: #718096; /* Muted color */
+}
+
+.item-menu-dots-button:hover {
+    color: #e2e8f0; /* Light up on hover */
+}
+
+/* Reuse action-menu styles from Table.css */
+.item-action-menu {
+    right: 25px; /* Adjust position relative to the smaller button */
+    top: 5px;
+    /* Other styles are inherited or same */
+}
+
+.no-items-message {
+    padding: 10px 20px;
+    font-style: italic;
+    color: #a0aec0;
+} 
