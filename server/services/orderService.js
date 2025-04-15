@@ -131,6 +131,26 @@ const getCompletedInvoices = async () => {
 };
 
 /**
+ * Retrieves a single invoice by its ID, including items and customer.
+ * @param {number} id - The ID of the invoice to retrieve.
+ * @returns {Promise<object|null>} The invoice object or null if not found.
+ */
+const getInvoiceById = async (id) => {
+  try {
+    const invoice = await Invoice.findByPk(id, {
+      include: [
+        { model: InvoiceItem, as: 'items' },
+        { model: Customer, as: 'customer' }
+      ]
+    });
+    return invoice; // Will be null if not found
+  } catch (error) {
+    console.error(`Error fetching invoice ${id}:`, error);
+    throw new Error(`Failed to fetch invoice ${id}.`);
+  }
+};
+
+/**
  * Updates an existing invoice. Can update status flags or other fields.
  * Does not handle item updates directly in this version.
  * @param {number} id - The ID of the invoice to update.
@@ -190,6 +210,7 @@ module.exports = {
   createInvoice,
   getActiveInvoices,
   getCompletedInvoices,
+  getInvoiceById,
   updateInvoice,
   deleteInvoice
 }; 

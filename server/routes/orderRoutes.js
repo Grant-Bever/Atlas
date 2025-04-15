@@ -17,6 +17,9 @@ router.get('/active', orderController.getActiveInvoices);
 // GET /api/orders/completed - Get all completed invoices
 router.get('/completed', orderController.getCompletedInvoices);
 
+// GET /api/orders/:id - Get a single invoice by ID
+router.get('/:id', orderController.getInvoiceById);
+
 // PUT /api/orders/:id - Update an invoice (e.g., mark as complete, paid)
 router.put('/:id', orderController.updateInvoice);
 

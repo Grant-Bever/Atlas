@@ -25,23 +25,54 @@ function ManagerNewInvoice() {
   const [total, setTotal] = useState(0);
 
   // State for UI control
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(isEditing); // Start loading immediately if editing
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   const [invoiceNumber, setInvoiceNumber] = useState(isEditing ? orderId : 'Auto-Generated'); // For display
 
-  // --- Fetch Order Data if Editing (Not implemented yet) ---
+  // --- Fetch Order Data if Editing ---
   useEffect(() => {
-    if (isEditing) {
-        // TODO: Implement fetching existing order data for editing
-        console.warn("Edit mode not fully implemented yet. Fetching existing order data is required.");
-        setError("Editing existing invoices is not yet supported.");
-        setIsLoading(false);
-        // When implemented, fetch the order by orderId, populate customerName, customerPhone, invoiceDate, items, total
+    const fetchOrderForEdit = async () => {
+      console.log(`Attempting to fetch order ${orderId} for editing...`);
+      setIsLoading(true);
+      setError(null);
+      try {
+          const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+          if (!response.ok) {
+             if (response.status === 404) {
+                 throw new Error(`Invoice with ID ${orderId} not found.`);
+             } else {
+                  throw new Error(`Failed to fetch invoice ${orderId}. Status: ${response.status}`);
+             }
+          }
+          const orderData = await response.json();
+          console.log("Fetched order data:", orderData);
+
+          // Populate state from fetched data
+          setCustomerName(orderData.customer ? orderData.customer.name : '');
+          setCustomerPhone(orderData.customer ? orderData.customer.phone : '');
+          setInvoiceDate(getFormattedDate(new Date(orderData.date)));
+          // Ensure items have a unique frontend ID if they don't have a DB id (though they should)
+          setItems(orderData.items.map((item, index) => ({ ...item, id: item.id || Date.now() + index })) || []);
+          // Total is calculated automatically by another useEffect based on items
+          setInvoiceNumber(orderData.id); // Set the actual invoice number
+
+      } catch (err) {
+          console.error("Error fetching order for edit:", err);
+          setError(err.message || `Failed to load order ${orderId} for editing.`);
+      } finally {
+          setIsLoading(false);
+      }
+    };
+
+    if (isEditing && orderId) {
+      fetchOrderForEdit();
     } else {
-        // Start with one empty row for new invoice
-        setItems([{ id: Date.now(), quantity: '', item: '', weight: '', price: '', notes: '', amount: 0 }]);
+      // Start with one empty row for new invoice
+      setItems([{ id: Date.now(), quantity: '', item: '', weight: '', price: '', notes: '', amount: 0 }]);
+      setIsLoading(false); // Ensure loading is false if not editing
     }
+    // No dependencies needed that would cause re-fetch on input change
   }, [orderId, isEditing]);
 
   // --- Item Management ---
@@ -119,36 +150,63 @@ function ManagerNewInvoice() {
      }
 
     // Prepare payload for the API - Sending name and phone
-    const invoicePayload = {
-      customerName: customerName.trim(),
-      customerPhone: customerPhone.trim(), // Send phone number
-      date: invoiceDate,
-      total: total,
-      items: items.map(({ id, ...rest }) => ({
-          ...rest,
-          quantity: parseFloat(rest.quantity) || 0,
-          price: parseFloat(rest.price) || 0,
-          amount: parseFloat(rest.amount) || 0,
-          weight: rest.weight ? parseFloat(rest.weight) : null,
-      })),
-      checked_out: false,
-      paid: false,
-      completed: false,
-    };
+    const itemPayload = items.map(({ id, amount, ...rest }) => ({ // Exclude frontend ID and calculated amount
+        ...rest,
+        quantity: parseFloat(rest.quantity) || 0,
+        price: parseFloat(rest.price) || 0,
+        // amount is calculated on backend or DB trigger ideally, or ensure total matches items sum
+        weight: rest.weight ? parseFloat(rest.weight) : null,
+    }));
 
     try {
         let response;
         let responseData;
         if (isEditing) {
-            // TODO: Implement Update logic
-            console.log(`UPDATING Invoice ${orderId}:`, invoicePayload);
-            setError("Updating invoices is not yet implemented.");
+            // --- Prepare Update Payload --- 
+            const updatePayload = {
+              // For now, assume we only update fields directly on the Invoice table
+              // We are NOT updating customer or items via this PUT request yet
+              // customerName: customerName.trim(), // Decide if customer name should be updatable here
+              // customerPhone: customerPhone.trim(), // Decide if customer phone should be updatable here
+              date: invoiceDate,
+              total: total, // Send updated total based on frontend calculation
+              // Potentially add other status fields if needed: checked_out, paid, completed
+              // TODO: Handle item updates (add/delete/modify) - Requires more complex logic
+              // This might involve fetching original items, diffing, and making separate API calls or a more complex backend endpoint.
+            };
+
+            console.log(`UPDATING Invoice ${orderId} with payload:`, updatePayload);
+            response = await fetch(`${API_BASE_URL}/orders/${orderId}`, { // Use the orderId in the URL
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatePayload),
+            });
+             if (!response.ok) {
+                let errorMsg = `Failed to update invoice. Status: ${response.status} ${response.statusText}`;
+                try { const errorBody = await response.json(); errorMsg = errorBody.message || errorMsg; } catch (e) {} 
+                throw new Error(errorMsg);
+            }
+            responseData = await response.json();
+            setSuccessMessage(`Invoice #${responseData.id} updated successfully!`);
+            setTimeout(() => navigate('/orders'), 2000); // Redirect after update
+
         } else {
-            console.log("SAVING New Invoice:", invoicePayload);
+            // --- Prepare Create Payload ---
+            const createPayload = {
+              customerName: customerName.trim(),
+              customerPhone: customerPhone.trim(),
+              date: invoiceDate,
+              total: total,
+              items: itemPayload, // Send the processed items
+              checked_out: false,
+              paid: false,
+              completed: false,
+            };
+            console.log("SAVING New Invoice:", createPayload);
             response = await fetch(`${API_BASE_URL}/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(invoicePayload),
+                body: JSON.stringify(createPayload),
             });
             if (!response.ok) {
                 let errorMsg = `Failed to create invoice. Status: ${response.status} ${response.statusText}`;

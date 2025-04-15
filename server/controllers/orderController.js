@@ -43,6 +43,26 @@ const getCompletedInvoices = async (req, res) => {
   }
 };
 
+// Controller to get a single invoice by ID
+const getInvoiceById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: 'Missing invoice ID.' });
+    }
+
+    const invoice = await orderService.getInvoiceById(Number(id));
+
+    if (!invoice) {
+      return res.status(404).json({ message: `Invoice with ID ${id} not found.` });
+    }
+    res.status(200).json(invoice);
+  } catch (error) {
+    console.error(`Controller error getting invoice ${req.params.id}:`, error.message);
+    res.status(500).json({ message: 'Failed to retrieve invoice', error: error.message });
+  }
+};
+
 // Controller to update an invoice (e.g., mark as completed, paid)
 const updateInvoice = async (req, res) => {
   try {
@@ -90,6 +110,7 @@ module.exports = {
   createInvoice,
   getActiveInvoices,
   getCompletedInvoices,
+  getInvoiceById,
   updateInvoice,
   deleteInvoice
 }; 

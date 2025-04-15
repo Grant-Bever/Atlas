@@ -90,10 +90,8 @@ function ManagerActiveOrders() {
   const handleEdit = (e, orderId) => {
     e.stopPropagation();
     setOpenMenuId(null); // Close menu
-    // TODO: Navigate to an edit page - this needs to be created
-    // For now, maybe log or disable
-    console.log(`Navigate to edit order: ${orderId}`);
-    // navigate(`/orders/edit/${orderId}`); // Uncomment when edit page exists
+    console.log(`Navigating to edit order: ${orderId}`);
+    navigate(`/orders/edit/${orderId}`); // Navigate to the edit route
   };
 
   const handleDeleteClick = (e, orderId) => {
@@ -245,7 +243,7 @@ function ManagerActiveOrders() {
                     {/* Action Menu Dropdown */}
                     {isMenuOpen && (
                       <div className="action-menu">
-                        <button onClick={(e) => handleEdit(e, order.id)} disabled><FaEdit /> Edit</button> {/* Disabled for now */}
+                        <button onClick={(e) => handleEdit(e, order.id)}><FaEdit /> Edit</button>
                         <button onClick={(e) => handleDeleteClick(e, order.id)} className="danger"><FaTrashAlt /> Delete</button>
                         <button onClick={(e) => handleMarkCompleteClick(e, order.id)}><FaCheckSquare /> Mark Complete</button>
                       </div>
