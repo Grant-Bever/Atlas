@@ -268,9 +268,9 @@ function ManagerCompletedOrders() {
 
       {/* Confirmation Modal for Delete */}
        {confirmDeleteModalState.isOpen && (
-         <div className="modal-backdrop">
-           <div className="modal">
-             <h2>Confirm Deletion</h2>
+         <div className="modal-overlay">
+           <div className="modal-content">
+             <h4>Confirm Deletion</h4>
              <p>Are you sure you want to delete completed Invoice #{confirmDeleteModalState.orderId}? This action cannot be undone.</p>
              <div className="modal-actions">
                <button onClick={handleCancelDelete} className="button button-secondary">Cancel</button>

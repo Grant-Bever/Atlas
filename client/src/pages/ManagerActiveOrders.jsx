@@ -306,9 +306,9 @@ function ManagerActiveOrders() {
 
       {/* Confirmation Modal */}
       {confirmModalState.isOpen && (
-        <div className="modal-backdrop">
-          <div className="modal">
-            <h2>Confirm Action</h2>
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h4>Confirm Action</h4>
             <p>
               {confirmModalState.type === 'delete'
                 ? `Are you sure you want to delete Invoice #${confirmModalState.orderId}? This action cannot be undone.`
