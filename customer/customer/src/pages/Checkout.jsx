@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import '../styles/Checkout.css';
+import api from '../utils/api'; // Import the API utility
 
 function Checkout() {
   const navigate = useNavigate();
@@ -12,18 +13,25 @@ function Checkout() {
     phone: '',
     email: ''
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   // Load cart items from localStorage
   useEffect(() => {
     const savedCart = localStorage.getItem('cart');
     if (savedCart) {
-      const parsedCart = JSON.parse(savedCart);
-      setCartItems(parsedCart);
-      
-      // Calculate total
-      const cartTotal = parsedCart.reduce((sum, item) => 
-        sum + (item.price_per_pound * item.quantity), 0);
-      setTotal(cartTotal);
+      try {
+        const parsedCart = JSON.parse(savedCart);
+        setCartItems(parsedCart);
+        
+        // Calculate total
+        const cartTotal = parsedCart.reduce((sum, item) => 
+          sum + (item.price_per_pound * item.quantity), 0);
+        setTotal(cartTotal);
+      } catch (err) {
+        console.error('Error parsing cart data:', err);
+        navigate('/cart');
+      }
     } else {
       // Redirect to cart if empty
       navigate('/cart');
@@ -42,24 +50,46 @@ function Checkout() {
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsSubmitting(true);
+    setError(null);
     
-    // TODO: Replace with actual API call
-    console.log('Submitting order:', {
-      customer: customerInfo,
-      items: cartItems,
-      total
-    });
-    
-    // For demonstration, just clear cart and redirect
-    alert('Order placed successfully!');
-    localStorage.removeItem('cart');
-    navigate('/');
+    try {
+      // Format order data
+      const orderData = {
+        customerInfo,
+        items: cartItems,
+        total
+      };
+      
+      // Call API to create order
+      await api.createOrder(orderData);
+      
+      // Clear cart and show success message
+      localStorage.removeItem('cart');
+      const response = await api.createOrder(orderData);
+      const orderId = response.data.order.id;
+      alert(`Order #${orderId} placed successfully!`);
+      
+      // Redirect to home page
+      navigate('/');
+    } catch (err) {
+      console.error('Error creating order:', err);
+      setError(err.response?.data?.message || 'Failed to create order. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
     <Layout>
       <div className="checkout-container">
         <h1>Checkout</h1>
+        
+        {error && (
+          <div className="error-message">
+            {error}
+          </div>
+        )}
         
         <div className="checkout-content">
           <div className="order-summary">
@@ -116,11 +146,10 @@ function Checkout() {
                 />
               </div>
               
-              {/* Payment details would go here (Stripe integration) */}
+              {/* Payment would go here in the future */}
               <div className="payment-section">
                 <h3>Payment Method</h3>
-                <p>Payment processing will be implemented with Stripe.</p>
-                {/* Stripe Elements would go here */}
+                <p>Payment processing will be implemented later. For now, orders will be processed on delivery.</p>
               </div>
               
               <div className="checkout-actions">
@@ -128,11 +157,16 @@ function Checkout() {
                   type="button" 
                   className="back-btn"
                   onClick={() => navigate('/cart')}
+                  disabled={isSubmitting}
                 >
                   Back to Cart
                 </button>
-                <button type="submit" className="place-order-btn">
-                  Place Order
+                <button 
+                  type="submit" 
+                  className="place-order-btn"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Processing...' : 'Place Order'}
                 </button>
               </div>
             </form>

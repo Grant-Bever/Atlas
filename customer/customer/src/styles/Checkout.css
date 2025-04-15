@@ -122,3 +122,12 @@
 .place-order-btn:hover {
   background-color: #2f855a;
 }
+
+.error-message {
+  background-color: #fed7d7;
+  color: #c53030;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border: 1px solid #feb2b2;
+}

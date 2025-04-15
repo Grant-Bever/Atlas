@@ -1,61 +1,136 @@
 import React, { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
 import '../styles/Products.css';
+import api from '../utils/api';
 
 function Products() {
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [cart, setCart] = useState([]);
+  const [quantities, setQuantities] = useState({});
+
+  // Load cart from localStorage
+  useEffect(() => {
+    const savedCart = localStorage.getItem('cart');
+    if (savedCart) {
+      try {
+        setCart(JSON.parse(savedCart));
+      } catch (err) {
+        console.error('Error loading cart:', err);
+      }
+    }
+  }, []);
 
   // Fetch categories and products
   useEffect(() => {
-    // TODO: Replace with actual API calls
-    // For now, using mock data
-    const mockCategories = [
-      { id: 1, name: 'Beef' },
-      { id: 2, name: 'Poultry' },
-      { id: 3, name: 'Pork' },
-    ];
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Fetch categories
+        const categoriesResponse = await api.getCategories();
+        setCategories(categoriesResponse.data);
+        
+        // Fetch all products
+        const productsResponse = await api.getProducts();
+        setProducts(productsResponse.data);
+        
+        // Initialize quantities state
+        const initialQuantities = {};
+        productsResponse.data.forEach(product => {
+          initialQuantities[product.id] = 1;
+        });
+        setQuantities(initialQuantities);
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load products. Please try again later.');
+        setLoading(false);
+      }
+    };
     
-    const mockProducts = [
-      { id: 1, name: 'Ribeye Steak', category_id: 1, price_per_pound: 18.99, quantity: 50 },
-      { id: 2, name: 'Ground Beef', category_id: 1, price_per_pound: 6.99, quantity: 100 },
-      { id: 3, name: 'Chicken Breast', category_id: 2, price_per_pound: 4.99, quantity: 75 },
-      { id: 4, name: 'Whole Chicken', category_id: 2, price_per_pound: 3.49, quantity: 30 },
-      { id: 5, name: 'Pork Chops', category_id: 3, price_per_pound: 7.99, quantity: 60 },
-    ];
-    
-    setCategories(mockCategories);
-    setProducts(mockProducts);
-    setLoading(false);
+    fetchData();
   }, []);
 
-  // Filter products by category
-  const filteredProducts = selectedCategory 
-    ? products.filter(product => product.category_id === selectedCategory) 
-    : products;
+  // Fetch products by category when category changes
+  useEffect(() => {
+    const fetchProductsByCategory = async () => {
+      if (selectedCategory === null) {
+        // If no category selected, fetch all products
+        try {
+          setLoading(true);
+          const response = await api.getProducts();
+          setProducts(response.data);
+          setLoading(false);
+        } catch (err) {
+          console.error('Error fetching all products:', err);
+          setError('Failed to load products. Please try again later.');
+          setLoading(false);
+        }
+      } else {
+        // Fetch products for selected category
+        try {
+          setLoading(true);
+          const response = await api.getProductsByCategory(selectedCategory);
+          setProducts(response.data);
+          setLoading(false);
+        } catch (err) {
+          console.error(`Error fetching products for category ${selectedCategory}:`, err);
+          setError('Failed to load products for this category. Please try again later.');
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchProductsByCategory();
+  }, [selectedCategory]);
+
+  // Handle quantity change
+  const handleQuantityChange = (productId, value) => {
+    setQuantities({
+      ...quantities,
+      [productId]: value
+    });
+  };
 
   // Add to cart function
   const addToCart = (product) => {
-    // Check if product is already in cart
-    const existingItem = cart.find(item => item.id === product.id);
+    const quantity = quantities[product.id] || 1;
     
-    if (existingItem) {
-      // Increase quantity if already in cart
-      setCart(cart.map(item => 
-        item.id === product.id 
-          ? { ...item, quantity: item.quantity + 1 } 
-          : item
-      ));
+    // Check if product is already in cart
+    const existingItemIndex = cart.findIndex(item => item.id === product.id);
+    
+    let updatedCart;
+    if (existingItemIndex >= 0) {
+      // Update existing item
+      updatedCart = [...cart];
+      updatedCart[existingItemIndex] = {
+        ...updatedCart[existingItemIndex],
+        quantity: updatedCart[existingItemIndex].quantity + quantity
+      };
     } else {
-      // Add new item to cart
-      setCart([...cart, { ...product, quantity: 1 }]);
+      // Add new item
+      updatedCart = [
+        ...cart,
+        {
+          ...product,
+          quantity
+        }
+      ];
     }
     
+    setCart(updatedCart);
+    
     // Store cart in localStorage
-    localStorage.setItem('cart', JSON.stringify(cart));
+    localStorage.setItem('cart', JSON.stringify(updatedCart));
+    
+    // Show confirmation
+    alert(`${quantity} ${product.name} added to cart!`);
   };
 
   return (
@@ -74,7 +149,7 @@ function Products() {
               <li 
                 key={category.id}
                 className={selectedCategory === category.id ? 'active' : ''}
-                onClick={() => setSelectedCategory(category.id)}
+                onClick={() => setSelectedCategory(category.name)}
               >
                 {category.name}
               </li>
@@ -85,8 +160,12 @@ function Products() {
         <div className="products-grid">
           {loading ? (
             <p>Loading products...</p>
+          ) : error ? (
+            <p className="error-message">{error}</p>
+          ) : products.length === 0 ? (
+            <p>No products available in this category.</p>
           ) : (
-            filteredProducts.map(product => (
+            products.map(product => (
               <div key={product.id} className="product-card">
                 <h3>{product.name}</h3>
                 <p className="price">${product.price_per_pound.toFixed(2)} / lb</p>
@@ -96,12 +175,14 @@ function Products() {
                     type="number" 
                     min="1" 
                     max={product.quantity} 
-                    defaultValue="1" 
+                    value={quantities[product.id] || 1}
+                    onChange={(e) => handleQuantityChange(product.id, parseInt(e.target.value))}
                     className="quantity-input"
                   />
                   <button 
                     className="add-to-cart-btn"
                     onClick={() => addToCart(product)}
+                    disabled={product.quantity < 1}
                   >
                     Add to Cart
                   </button>

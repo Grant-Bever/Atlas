@@ -8,6 +8,7 @@ const orderRoutes = require('./routes/orderRoutes');
 const totalsRoutes = require('./routes/totalsRoutes'); // <-- Add totals routes
 const employeeRoutes = require('./routes/employeeRoutes'); // <-- Import employee routes
 const inventoryRoutes = require('./routes/inventoryRoutes'); // <-- Import inventory routes
+const customerRoutes = require('./routes/customerRoutes');
 // Add other route imports here as you create them (e.g., inventoryRoutes)
 
 const app = express();
@@ -22,6 +23,7 @@ app.use('/api/orders', orderRoutes);
 app.use('/api/totals', totalsRoutes); // <-- Mount totals routes
 app.use('/api/employees', employeeRoutes); // <-- Mount employee routes
 app.use('/api/inventory', inventoryRoutes); // <-- Mount inventory routes
+app.use('/api/customer', customerRoutes);
 // app.use('/api/inventory', inventoryRoutes); // Example for other routes
 // Add other routes here...
 
@@ -31,7 +33,7 @@ app.get('/', (req, res) => {
 });
 
 // --- Database Synchronization and Server Start ---
-const PORT = process.env.PORT || 3001; // Use port from environment or default to 3001
+const PORT = process.env.PORT || 3002; // Use port from environment or default to 3002
 
 // Sync database (optional: use { force: true } to drop and recreate tables - USE WITH CAUTION)
 db.sequelize.sync()
