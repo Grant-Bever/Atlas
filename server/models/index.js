@@ -29,6 +29,11 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
+// Export Employee specifically if needed elsewhere easily
+// db.Employee = require('./EmployeeManagerModel')(sequelize, Sequelize.DataTypes);
+// db.TimesheetEntry = require('./TimesheetEntryModel')(sequelize, Sequelize.DataTypes);
+// db.WeeklyTimesheetStatus = require('./WeeklyTimesheetStatusModel')(sequelize, Sequelize.DataTypes);
+
 db.sequelize = sequelize; // Add the sequelize instance to the db object
 db.Sequelize = Sequelize; // Add the Sequelize library itself
 

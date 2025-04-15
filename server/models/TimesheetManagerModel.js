@@ -31,7 +31,7 @@ module.exports = (sequelize, DataTypes) => {
     manager_id: {
       type: DataTypes.INTEGER,
       references: {
-        model: 'Managers', // Can be model name or model class
+        model: 'managers',
         key: 'id'
       },
       onUpdate: 'CASCADE',

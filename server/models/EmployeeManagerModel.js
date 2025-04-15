@@ -4,6 +4,14 @@ module.exports = (sequelize, DataTypes) => {
   class Employee extends Model {
     static associate(models) {
       Employee.hasMany(models.Workday, { foreignKey: 'employee_id', as: 'workdays' });
+      Employee.hasMany(models.TimesheetEntry, {
+        foreignKey: 'employee_id',
+        as: 'timesheetEntries'
+      });
+      Employee.hasMany(models.WeeklyTimesheetStatus, {
+        foreignKey: 'employee_id',
+        as: 'weeklyStatuses'
+      });
     }
   }
   Employee.init({
@@ -34,13 +42,25 @@ module.exports = (sequelize, DataTypes) => {
       // Consider adding hooks for password hashing (bcrypt) before saving
     },
     hourly_rate: {
-      type: DataTypes.DECIMAL(10, 2)
+      type: DataTypes.DECIMAL(10, 2),
+      allowNull: true // Or false depending on requirements, can be set during onboarding
+    },
+    is_active: { // New field
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: 'is_active'
+    },
+    fired_at: { // New field
+      type: DataTypes.DATE,
+      allowNull: true, // Null when active
+      field: 'fired_at'
     }
   }, {
     sequelize,
     modelName: 'Employee',
     tableName: 'employees',
-    timestamps: false
+    timestamps: false // Assuming no created_at/updated_at needed for employee itself
   });
   return Employee;
 }; 

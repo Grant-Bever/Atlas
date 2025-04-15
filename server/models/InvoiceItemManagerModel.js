@@ -50,7 +50,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'Invoices',
+        model: 'invoices',
         key: 'id'
       },
       onUpdate: 'CASCADE',
