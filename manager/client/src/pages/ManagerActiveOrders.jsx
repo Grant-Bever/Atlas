@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import io from 'socket.io-client';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Import Modal styles
 import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare, FaHistory, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+
+// Socket.IO connection URL (should match server)
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:3002';
 
 // Base URL for the API (Consider moving this to a config file)
 const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
@@ -22,44 +26,79 @@ function ManagerActiveOrders() {
   const [sortConfig, setSortConfig] = useState({ key: 'date', direction: 'DESC' });
   const [searchQuery, setSearchQuery] = useState(''); // For triggering search fetch
 
-  // --- Fetch Active Orders ---
+  // --- Fetch Active Orders (using useCallback to prevent recreation) ---
+  const fetchActiveOrders = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const params = new URLSearchParams();
+    if (searchQuery) {
+      params.append('searchCustomer', searchQuery);
+    }
+    if (sortConfig.key) {
+      params.append('sortBy', sortConfig.key);
+      params.append('sortDir', sortConfig.direction);
+    }
+    const queryString = params.toString();
+
+    try {
+      // NOTE: Using relative path because proxy should handle it
+      const response = await fetch(`/api/orders/active?${queryString}`); 
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      const ordersWithItemsArray = data.map(order => ({
+          ...order,
+          items: order.items || []
+      }));
+      setOrders(ordersWithItemsArray);
+    } catch (e) {
+      console.error("Failed to fetch active orders:", e);
+      setError("Failed to load active orders. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  }, [searchQuery, sortConfig]); // Dependencies for useCallback
+
+  // --- Initial Data Fetch ---
   useEffect(() => {
-    const fetchActiveOrders = async () => {
-      setLoading(true);
-      setError(null);
-      // Construct query parameters
-      const params = new URLSearchParams();
-      if (searchQuery) {
-        params.append('searchCustomer', searchQuery);
-      }
-      if (sortConfig.key) {
-        params.append('sortBy', sortConfig.key);
-        params.append('sortDir', sortConfig.direction);
-      }
-      const queryString = params.toString();
-
-      try {
-        const response = await fetch(`${API_BASE_URL}/orders/active?${queryString}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const data = await response.json();
-        const ordersWithItemsArray = data.map(order => ({
-            ...order,
-            items: order.items || []
-        }));
-        setOrders(ordersWithItemsArray);
-      } catch (e) {
-        console.error("Failed to fetch active orders:", e);
-        setError("Failed to load active orders. Please try again later.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchActiveOrders();
-    // Re-fetch when searchQuery or sortConfig changes
-  }, [searchQuery, sortConfig]);
+  }, [fetchActiveOrders]); // Dependency is the memoized fetch function
+
+  // --- Socket.IO Connection and Event Listener ---
+  useEffect(() => {
+    const socket = io(SOCKET_URL);
+    console.log('Attempting to connect WebSocket...');
+
+    socket.on('connect', () => {
+      console.log('WebSocket connected:', socket.id);
+    });
+
+    socket.on('connect_error', (err) => {
+      console.error('WebSocket connection error:', err);
+      // Optionally display an error to the user
+    });
+
+    socket.on('disconnect', (reason) => {
+      console.log('WebSocket disconnected:', reason);
+    });
+
+    // Listen for new orders pushed from the server
+    socket.on('new_order', (newOrder) => {
+      console.log('Received new_order event:', newOrder);
+      // Add the new order to the beginning of the list
+      setOrders((prevOrders) => [
+        { ...newOrder, items: newOrder.items || [] }, // Ensure items array exists
+        ...prevOrders,
+      ]);
+    });
+
+    // Cleanup function: disconnect socket when component unmounts
+    return () => {
+      console.log('Disconnecting WebSocket...');
+      socket.disconnect();
+    };
+  }, []); // Empty dependency array ensures this runs only once on mount/unmount
 
   // --- Row Expansion ---
   const handleRowClick = (orderId) => {
@@ -282,33 +321,30 @@ function ManagerActiveOrders() {
           </tr>
         </thead>
         <tbody>
+          {/* Conditional Rendering: Map orders or show placeholder row */}
           {orders.length > 0 ? orders.map((order) => {
             const isExpanded = expandedRows.has(order.id);
             const isMenuOpen = openMenuId === order.id;
 
+            // Note: React.Fragment doesn't accept className or style directly
             return (
               <React.Fragment key={order.id}>
-                {/* Main Order Row */}
-                {/* Add data-order-id to the container for click outside detection */}
+                {/* Main Order Row - Ensure no whitespace text nodes here */}
                 <tr onClick={() => handleRowClick(order.id)} className={`clickable-row ${isExpanded ? 'expanded' : ''}`}>
                   <td className="expand-icon-cell">
-                    {order.items && order.items.length > 0 ? (isExpanded ? <FaChevronDown /> : <FaChevronRight />) : ''} {/* Only show icon if items exist */}
+                    {order.items && order.items.length > 0 ? (isExpanded ? <FaChevronDown /> : <FaChevronRight />) : ''}
                   </td>
                   <td>{order.id}</td>
-                  {/* Use customer name from the included association */}
                   <td>{order.customer ? order.customer.name : 'N/A'}</td>
-                  {/* Format date if needed */}
                   <td>{new Date(order.date).toLocaleDateString()}</td>
                   <td>${parseFloat(order.total || 0).toFixed(2)}</td>
-                  {/* Actions Cell */}
-                  {/* Add data-order-id here too */}
                   <td className="action-cell action-menu-container" data-order-id={order.id}>
                      <button onClick={(e) => handleMenuToggle(e, order.id)} className="icon-button menu-dots-button">
                       <FaEllipsisV />
                     </button>
-                    {/* Action Menu Dropdown */}
                     {isMenuOpen && (
                       <div className="action-menu">
+                        {/* Action buttons */}
                         <button onClick={(e) => handleEdit(e, order.id)}><FaEdit /> Edit</button>
                         <button onClick={(e) => handleDeleteClick(e, order.id)} className="danger"><FaTrashAlt /> Delete</button>
                         <button onClick={(e) => handleMarkCompleteClick(e, order.id)}><FaCheckSquare /> Mark Complete</button>
@@ -316,12 +352,11 @@ function ManagerActiveOrders() {
                     )}
                   </td>
                 </tr>
-
-                {/* Collapsible Row with Nested Table */}
+                {/* Collapsible Row - Ensure no whitespace text nodes here */}
                 {isExpanded && order.items && order.items.length > 0 && (
                    <tr className="collapsible-row">
-                    <td></td> {/* Spacer for expand icon */}
-                    <td colSpan="5"> {/* Span across remaining cols + actions col */}
+                    <td></td> {/* Spacer */}
+                    <td colSpan="5">
                       <div className="nested-table-container">
                         <table className="data-table nested-table">
                           <thead>
@@ -351,10 +386,10 @@ function ManagerActiveOrders() {
                     </td>
                   </tr>
                 )}
-                 {/* Handle case where row expanded but no items */}
+                 {/* No Items Row - Ensure no whitespace text nodes here */}
                  {isExpanded && (!order.items || order.items.length === 0) && (
                      <tr className="collapsible-row no-items-row">
-                         <td></td>
+                         <td></td> {/* Spacer */}
                          <td colSpan="5" style={{ textAlign: 'center', fontStyle: 'italic', padding: '10px' }}>
                              No items associated with this order.
                          </td>
@@ -364,7 +399,9 @@ function ManagerActiveOrders() {
             );
           }) : (
              <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>No active orders found matching your criteria.</td>
+                <td colSpan="6" style={{ textAlign: 'center', padding: '20px', fontStyle: 'italic' }}>
+                  No active orders found matching your criteria.
+                </td>
              </tr>
           )}
         </tbody>

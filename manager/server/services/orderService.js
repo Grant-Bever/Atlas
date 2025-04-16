@@ -1,10 +1,12 @@
 const db = require('../models'); // Imports index.js which initializes Sequelize and models
 const { Invoice, InvoiceItem, Customer } = db;
 const { Op } = require('sequelize'); // Import Operators
+const { getIo } = require('../socketManager'); // Import getIo
 
 /**
  * Creates a new invoice along with its items.
  * Finds or creates customer by name (case-insensitive) and phone.
+ * Emits a 'new_order' event via Socket.IO upon successful creation.
  * @param {object} invoiceData - Data for the invoice header (customerName, customerPhone, date, total, items array).
  * @returns {Promise<object>} The created invoice object with items.
  */
@@ -61,29 +63,98 @@ const createInvoice = async (invoiceData) => {
 
     // --- Create Invoice Items ---
     if (items.length > 0) {
-      const invoiceItemsData = items.map(item => ({
-        ...item,
-        invoice_id: newInvoice.id
-      }));
-      await InvoiceItem.bulkCreate(invoiceItemsData, { transaction });
+      // Map items from invoiceData to the format needed for InvoiceItem creation
+      const itemsData = items.map(item => {
+        // Validate item structure received by the service
+        if (item.id === undefined || item.quantity === undefined || item.price_per_pound === undefined || item.name === undefined) {
+          console.error('[Order Service] Invalid item structure in itemsData:', item);
+          throw new Error('Invalid item data: Missing id, quantity, price_per_pound, or name.');
+        }
+
+        // Calculate amount
+        const quantity = parseFloat(item.quantity);
+        const price = parseFloat(item.price_per_pound);
+        if (isNaN(quantity) || isNaN(price)) {
+            console.error('[Order Service] Invalid quantity or price for item:', item);
+            throw new Error('Invalid quantity or price for item. Cannot calculate amount.');
+        }
+        const amount = quantity * price;
+
+        return {
+          invoice_id: newInvoice.id,
+          item_id: item.id, // Link to the Inventory item
+          item: item.name,
+          quantity: quantity,
+          price: price, // Store the price per unit/pound at the time of order
+          amount: amount, // Store the calculated total amount for this line item
+          // Add other relevant fields from item if needed, e.g., item category snapshot
+          // notes: item.notes, // Example if notes were included
+          // weight: item.weight, // Example if weight was included
+        };
+      });
+
+      console.log('[Order Service] Mapped itemsData for bulkCreate:', JSON.stringify(itemsData, null, 2));
+
+      // Bulk create invoice items if there are any
+      if (itemsData.length > 0) {
+        await InvoiceItem.bulkCreate(itemsData, { transaction });
+        console.log(`[Order Service] Successfully created ${itemsData.length} invoice items for Invoice ID: ${newInvoice.id}`);
+      } else {
+        console.log(`[Order Service] No items provided for Invoice ID: ${newInvoice.id}`);
+      }
     }
 
     // --- Commit Transaction ---
     await transaction.commit();
+    console.log('[Order Service] Transaction committed for new invoice.'); // Log commit success
 
     // --- Refetch and Return Result ---
-    const result = await Invoice.findByPk(newInvoice.id, {
-      include: [
-        { model: InvoiceItem, as: 'items' },
-        { model: Customer, as: 'customer' }
-      ]
-    });
+    let result = null; // Define result outside try block
+    try {
+        console.log(`[Order Service] Refetching Invoice with ID: ${newInvoice.id}`);
+        result = await Invoice.findByPk(newInvoice.id, {
+            include: [
+                { model: InvoiceItem, as: 'items' },
+                { model: Customer, as: 'customer' }
+            ]
+        });
+        console.log('[Order Service] Refetch result:', result ? `Invoice ID ${result.id} found` : 'Invoice not found after commit');
+    } catch (refetchError) {
+        console.error('[Order Service] Error during refetch after commit:', refetchError);
+        // Decide if you should still attempt to emit or throw
+        // For now, we'll proceed to check `result` which will be null
+    }
+
+    // --- Emit Socket.IO Event --- 
+    if (result) {
+        try {
+            const io = getIo(); // Get the io instance
+            const orderDataForEmit = result.toJSON(); // Get plain JSON data
+            console.log('[Socket Emit] Attempting to emit new_order for order:', orderDataForEmit.id);
+            console.log('[Socket Emit] Data:', JSON.stringify(orderDataForEmit, null, 2)); // Log the data being sent
+            
+            io.emit('new_order', orderDataForEmit); // Emit event with the new invoice data
+            
+            console.log('[Socket Emit] Successfully emitted new_order event for invoice:', result.id);
+        } catch (socketError) {
+            console.error("[Socket Emit] Error emitting new_order event:", socketError);
+            // Continue even if socket fails, order was still created
+        }
+    } else {
+        // Log if result was null/undefined, preventing emit
+        console.log('[Socket Emit] Skipped emit because refetched result was null/undefined.');
+    }
+
     return result;
 
   } catch (error) {
     // --- Rollback Transaction on Error ---
-    if (transaction) await transaction.rollback();
-    console.error("Error creating invoice in service:", error);
+    if (transaction && transaction.finished !== 'commit' && transaction.finished !== 'rollback') {
+        // Add more specific logging inside the main catch block
+        console.error("[Order Service] Error caught in main try block:", error);
+        await transaction.rollback();
+        console.error("[Order Service] Transaction rolled back due to error.");
+    }
     // Check for specific validation errors from Sequelize if needed
     // if (error.name === 'SequelizeValidationError') { ... }
     throw new Error(`Failed to create invoice: ${error.message}`);

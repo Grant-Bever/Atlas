@@ -67,7 +67,7 @@ function Checkout() {
       // Clear cart and show success message
       localStorage.removeItem('cart'); 
       const response = await api.createOrder(orderData); // Keep this call to get the response
-      const orderId = response.data.order.id;
+      const orderId = response.data.id;
       alert(`Order #${orderId} placed successfully!`);
       
       // Redirect to home page
