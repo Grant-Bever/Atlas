@@ -72,7 +72,7 @@ web_modules/
 # Yarn Integrity file
 .yarn-integrity
 
-# dotenv environment variables file
+# dotenv environment variable files
 .env
 .env.development.local
 .env.test.local
@@ -87,7 +87,7 @@ web_modules/
 .next
 out
 
-# Nuxt.js build output
+# Nuxt.js build / generate output
 .nuxt
 dist
 
@@ -103,6 +103,12 @@ dist
 # vuepress v2.x temp and cache directory
 .temp
 .cache
+
+# vitepress build output
+**/.vitepress/dist
+
+# vitepress cache directory
+**/.vitepress/cache
 
 # Docusaurus cache and generated files
 .docusaurus
@@ -127,4 +133,4 @@ dist
 .yarn/unplugged
 .yarn/build-state.yml
 .yarn/install-state.gz
-.pnp.* 
+.pnp.*

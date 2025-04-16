@@ -49,8 +49,8 @@ const getWeeklyTimesheets = async () => {
 
     try {
         const employeesWithEntries = await Employee.findAll({
-            // Include is_active status
-            attributes: ['id', 'name', 'hourly_rate', 'email', 'phone', 'is_active', 'fired_at'], 
+            // REMOVED 'fired_at' from attributes
+            attributes: ['id', 'name', 'hourly_rate', 'email', 'phone'], 
             include: [
                 {
                     model: TimesheetEntry,
@@ -112,8 +112,7 @@ const getWeeklyTimesheets = async () => {
                 employeeId: employeeData.id,
                 name: employeeData.name,
                 hourlyWage: parseFloat(employeeData.hourly_rate) || 0,
-                isActive: employeeData.is_active, // Include active status
-                firedAt: employeeData.fired_at, // Include fired timestamp
+                // REMOVED isActive: employeeData.is_active, // Include active status
                 approvalStatus: approvalStatus,
                 timesheet: timesheet,
                 weeklyGross: weeklyGross
@@ -142,10 +141,12 @@ const updateWeeklyTimesheetStatus = async (employeeId, status) => {
     }
 
     try {
-        const employee = await Employee.findByPk(employeeId, { attributes: ['id', 'is_active'] }); // Check if active
+        // REMOVED 'is_active' from attributes
+        const employee = await Employee.findByPk(employeeId, { attributes: ['id'] }); 
         if (!employee) {
             throw new Error(`Employee with ID ${employeeId} not found.`);
         }
+        // REMOVED Check for inactive employee
         // Optional: Prevent approving/denying fired employees? Or allow it?
         // if (!employee.is_active) {
         //     throw new Error(`Cannot update timesheet status for inactive employee ${employeeId}.`);
@@ -186,16 +187,18 @@ const fireEmployee = async (employeeId) => {
         if (!employee) {
             throw new Error(`Employee with ID ${employeeId} not found.`);
         }
-        if (!employee.is_active) {
-            console.log(`Employee ${employeeId} is already inactive.`);
-            return employee; // Or throw error if preferred
-        }
+        // REMOVED Check if already inactive
+        // ...
 
-        employee.is_active = false;
-        employee.fired_at = new Date(); // Record the time of firing
-        await employee.save();
+        // REMOVED Setting is_active to false
+        // employee.is_active = false;
+        // REMOVED Setting fired_at timestamp
+        // employee.fired_at = new Date(); // Record the time of firing
+        // REMOVED save() call as no relevant fields are changed now
+        // await employee.save();
 
-        console.log(`Employee ${employeeId} marked as inactive (fired) at ${employee.fired_at}.`);
+        console.log(`Employee ${employeeId} fire action attempted (fired_at column does not exist).`);
+        // Return the employee object as it exists, without attempting to save non-existent fields
         return employee;
     } catch (error) {
         console.error(`Error firing employee ${employeeId}:`, error);
@@ -214,16 +217,18 @@ const reinstateEmployee = async (employeeId) => {
         if (!employee) {
             throw new Error(`Employee with ID ${employeeId} not found.`);
         }
-        if (employee.is_active) {
-            console.log(`Employee ${employeeId} is already active.`);
-            return employee; // Or throw error if preferred
-        }
+        // REMOVED Check if already active
+        // ...
 
-        employee.is_active = true;
-        employee.fired_at = null; // Clear the firing timestamp
-        await employee.save();
+        // REMOVED Setting is_active to true
+        // employee.is_active = true;
+        // REMOVED Clearing fired_at timestamp
+        // employee.fired_at = null; // Clear the firing timestamp
+        // REMOVED save() call as no relevant fields are changed now
+        // await employee.save();
 
-        console.log(`Employee ${employeeId} marked as active (reinstated).`);
+        console.log(`Employee ${employeeId} reinstate action attempted (fired_at column does not exist).`);
+        // Return the employee object as it exists
         return employee;
     } catch (error) {
         console.error(`Error reinstating employee ${employeeId}:`, error);

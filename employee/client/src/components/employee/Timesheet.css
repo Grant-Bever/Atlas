@@ -1,0 +1,308 @@
+.timesheet {
+  padding: 20px;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.pay-period-status {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.weekly-calendar {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.week-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.day-cell {
+  border: 1px solid #ddd;
+  padding: 10px;
+  min-height: 80px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.day-cell:hover {
+  background-color: #f5f5f5;
+}
+
+.day-cell.selected {
+  border-color: #4CAF50;
+  background-color: #e8f5e9;
+}
+
+.date {
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.hours {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.status {
+  font-size: 0.8em;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+.status.pending {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.status.approved {
+  background-color: #e8f5e9;
+  color: #4caf50;
+}
+
+.status.paid {
+  background-color: #e8eaf6;
+  color: #3f51b5;
+}
+
+.hours-form {
+  background-color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+button[type="submit"] {
+  background-color: #4CAF50;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button[type="submit"]:hover {
+  background-color: #45a049;
+}
+
+.error {
+  color: #f44336;
+  text-align: center;
+  padding: 20px;
+}
+
+/* Styles for Timesheet component */
+
+/* Rename main container for clarity */
+.employee-timesheet-container {
+  padding: 20px;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 10px 15px;
+  border: 1px solid #f5c6cb;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+/* Remove redundant clock section styles if not used elsewhere */
+/* .clock-section { ... } */
+/* .clock-buttons { ... } */
+/* .clock-button { ... } */
+
+.weekly-details {
+  background-color: #fff;
+  border: 1px solid #dee2e6; /* Slightly darker border */
+  border-radius: 6px;
+  padding: 20px;
+  margin-top: 20px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.weekly-details h2 {
+  margin-top: 0;
+  font-size: 1.4em;
+  color: #212529; /* Darker heading */
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.pay-period-info {
+  font-size: 0.9em;
+  color: #6c757d; /* Medium gray */
+  margin-bottom: 20px;
+}
+
+.timesheet-details-list {
+  width: 100%;
+  margin-bottom: 20px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.timesheet-details-row {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr 1fr 0.8fr 1fr; 
+  padding: 12px 10px; /* Increased padding */
+  /* Remove individual bottom borders */
+  /* border-bottom: 1px solid #f0f0f0; */ 
+  text-align: left;
+  align-items: center;
+  font-size: 0.95em;
+  color: #495057; /* Slightly lighter text for items */
+}
+
+.timesheet-details-item {
+  background-color: #fff; /* Ensure white background */
+  border-bottom: 1px solid #f0f0f0; /* Add border between items */
+}
+
+.timesheet-details-item:last-of-type {
+  border-bottom: none; /* Remove border for last item */
+}
+
+.timesheet-details-row span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.timesheet-details-row span:last-child {
+  text-align: right;
+  font-weight: 500; 
+}
+
+.timesheet-details-header {
+  font-weight: 600; 
+  color: #f8f9fa; /* Light text for dark background */
+  background-color: #343a40; /* Dark background */
+  border-bottom: none; /* Remove bottom border */
+  /* Remove border radius as list container has it */
+  /* border-top-left-radius: 4px; */
+  /* border-top-right-radius: 4px; */
+}
+
+.timesheet-details-footer {
+  display: flex; /* Use flex for footer alignment */
+  justify-content: flex-end; /* Align content to the right */
+  gap: 10px; /* Space between label and value */
+  font-weight: bold;
+  color: #f8f9fa; 
+  background-color: #495057; 
+  border-top: 1px solid #343a40; 
+  margin-top: 0; 
+  padding: 12px 10px; /* Match padding */
+}
+
+.submit-timesheet-button {
+  background-color: #007bff;
+  color: white;
+  padding: 8px 15px; 
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95em;
+  transition: background-color 0.2s ease;
+  display: block; 
+  width: fit-content; 
+  margin-top: 15px; 
+}
+
+.submit-timesheet-button:disabled {
+  background-color: #6c757d; /* Darker disabled color */
+  cursor: not-allowed;
+}
+
+.submit-timesheet-button:not(:disabled):hover {
+  background-color: #0056b3;
+}
+
+/* Style for the day section container */
+.timesheet-day-section {
+  border-bottom: 1px solid #dee2e6; /* Separator line between days */
+  padding: 10px 0;
+}
+
+.timesheet-day-section:last-child {
+  border-bottom: none;
+}
+
+/* Style for the day name */
+.timesheet-day-name {
+  font-weight: bold;
+  padding: 5px 10px;
+  background-color: #f8f9fa;
+  color: #495057;
+}
+
+/* Container for events within a day */
+.timesheet-day-events {
+  padding-left: 15px; /* Indent events */
+}
+
+/* Style for each clock in/out event row */
+.timesheet-event-row {
+  display: flex; /* Use flexbox for alignment */
+  justify-content: space-between; /* Space out type and time */
+  padding: 6px 10px;
+  font-size: 0.9em;
+  border-bottom: 1px dashed #f0f0f0; /* Lighter dashed line */
+}
+
+.timesheet-day-events .timesheet-event-row:last-child {
+  border-bottom: none;
+}
+
+.event-type {
+  font-weight: 500;
+}
+
+.event-type-in {
+  color: #28a745; /* Green for Clock In */
+}
+
+.event-type-out {
+  color: #dc3545; /* Red for Clock Out */
+}
+
+.event-time {
+  color: #6c757d;
+}
+
+.no-events {
+  color: #adb5bd; /* Light grey for no activity */
+  font-style: italic;
+  text-align: center;
+} 
