@@ -6,7 +6,8 @@
   "scripts": {
     "start:manager:server": "node manager/server/server.js",
     "start:employee:client": "npm start --prefix employee/client",
-    "start:manager:client": "npm start --prefix manager/client"
+    "start:manager:client": "npm start --prefix manager/client",
+    "start:customer:customer": "npm start --prefix customer/customer"
   },
   "dependencies": {
     "cors": "^2.8.5",

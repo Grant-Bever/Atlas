@@ -141,33 +141,33 @@ button[type="submit"]:hover {
 /* .clock-button { ... } */
 
 .weekly-details {
-  background-color: #fff;
-  border: 1px solid #dee2e6; /* Slightly darker border */
+  background-color: #2d3748; /* Dark card background */
+  border: 1px solid #4a5568; /* Match layout border */
   border-radius: 6px;
   padding: 20px;
   margin-top: 20px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3); /* Adjusted shadow for dark theme */
 }
 
 .weekly-details h2 {
   margin-top: 0;
   font-size: 1.4em;
-  color: #212529; /* Darker heading */
-  border-bottom: 1px solid #eee;
+  color: #f7fafc; /* Lighter heading */
+  border-bottom: 1px solid #4a5568; /* Match layout border */
   padding-bottom: 10px;
   margin-bottom: 15px;
 }
 
 .pay-period-info {
   font-size: 0.9em;
-  color: #6c757d; /* Medium gray */
+  color: #a0aec0; /* Match layout paragraph text */
   margin-bottom: 20px;
 }
 
 .timesheet-details-list {
   width: 100%;
   margin-bottom: 20px;
-  border: 1px solid #dee2e6;
+  border: 1px solid #4a5568; /* Match layout border */
   border-radius: 4px;
   overflow: hidden;
 }
@@ -175,18 +175,16 @@ button[type="submit"]:hover {
 .timesheet-details-row {
   display: grid;
   grid-template-columns: 1.2fr 1fr 1fr 0.8fr 1fr; 
-  padding: 12px 10px; /* Increased padding */
-  /* Remove individual bottom borders */
-  /* border-bottom: 1px solid #f0f0f0; */ 
+  padding: 12px 10px; 
   text-align: left;
   align-items: center;
   font-size: 0.95em;
-  color: #495057; /* Slightly lighter text for items */
+  color: #cbd5e0; /* Match layout link text */
 }
 
 .timesheet-details-item {
-  background-color: #fff; /* Ensure white background */
-  border-bottom: 1px solid #f0f0f0; /* Add border between items */
+  background-color: #2d3748; /* Match card background */
+  border-bottom: 1px solid #4a5568; /* Match layout border */
 }
 
 .timesheet-details-item:last-of-type {
@@ -251,7 +249,7 @@ button[type="submit"]:hover {
 
 /* Style for the day section container */
 .timesheet-day-section {
-  border-bottom: 1px solid #dee2e6; /* Separator line between days */
+  border-bottom: 1px solid #4a5568; /* Match layout border */
   padding: 10px 0;
 }
 
@@ -263,8 +261,8 @@ button[type="submit"]:hover {
 .timesheet-day-name {
   font-weight: bold;
   padding: 5px 10px;
-  background-color: #f8f9fa;
-  color: #495057;
+  background-color: #4a5568; /* Darker background */
+  color: #f7fafc; /* Lighter text */
 }
 
 /* Container for events within a day */
@@ -274,11 +272,11 @@ button[type="submit"]:hover {
 
 /* Style for each clock in/out event row */
 .timesheet-event-row {
-  display: flex; /* Use flexbox for alignment */
-  justify-content: space-between; /* Space out type and time */
+  display: flex; 
+  justify-content: space-between; 
   padding: 6px 10px;
   font-size: 0.9em;
-  border-bottom: 1px dashed #f0f0f0; /* Lighter dashed line */
+  border-bottom: 1px dashed #4a5568; /* Darker dashed line */
 }
 
 .timesheet-day-events .timesheet-event-row:last-child {
@@ -298,11 +296,11 @@ button[type="submit"]:hover {
 }
 
 .event-time {
-  color: #6c757d;
+  color: #a0aec0; /* Match layout paragraph text */
 }
 
 .no-events {
-  color: #adb5bd; /* Light grey for no activity */
+  color: #718096; /* Slightly darker grey */
   font-style: italic;
   text-align: center;
 } 

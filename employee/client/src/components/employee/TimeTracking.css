@@ -5,10 +5,10 @@
 }
 
 .status-section {
-  background-color: white;
+  background-color: #2d3748; /* Dark card background */
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Adjusted shadow */
   margin-bottom: 20px;
 }
 
@@ -20,8 +20,11 @@
 
 .clock-buttons {
   display: flex;
-  gap: 20px;
-  justify-content: center;
+  flex-direction: column; /* Stack buttons vertically */
+  gap: 10px; /* Adjust gap for vertical layout */
+  /* Remove justify-content as it's not needed for column */
+  /* justify-content: center; */ 
+  align-items: stretch; /* Make buttons fill width */
   margin-top: 20px;
 }
 
@@ -50,10 +53,10 @@
 }
 
 .history-section {
-  background-color: white;
+  background-color: #2d3748; /* Dark card background */
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3); /* Adjusted shadow */
 }
 
 .history-list {
@@ -64,7 +67,7 @@
   display: flex;
   justify-content: space-between;
   padding: 10px;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid #4a5568; /* Match layout border */
 }
 
 .error {
