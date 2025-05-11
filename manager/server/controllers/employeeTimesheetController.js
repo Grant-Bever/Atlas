@@ -1,7 +1,11 @@
 const clockService = require('../services/clockService');
 const employeeTimesheetService = require('../services/employeeTimesheetService');
 const payPeriodService = require('../services/payPeriodService');
+const employeeService = require('../services/employeeService');
 const db = require('../models'); // Or however you access your models, e.g., const { Employee } = require('../models');
+const { WeeklyTimesheetStatus, Timesheet } = require('../models');
+const moment = require('moment');
+const { Op } = require('sequelize');
 
 // Assumes auth middleware provides req.user.id or req.employee.id as employeeId
 
@@ -151,11 +155,70 @@ const getMyProfile = async (req, res, next) => {
   }
 };
 
+const getTimesheetStatus = async (req, res, next) => {
+  try {
+    const employeeId = req.user.id;
+    const { startDate, endDate, weekStartDateOnly } = employeeService.getCurrentWeekDates();
+
+    // First check WeeklyTimesheetStatus
+    const weeklyStatus = await WeeklyTimesheetStatus.findOne({
+      where: {
+        employeeId,
+        weekStartDate: weekStartDateOnly
+      }
+    });
+
+    if (weeklyStatus) {
+      // If we have a weekly status record, use that
+      return res.json({
+        status: weeklyStatus.status.toLowerCase()
+      });
+    }
+
+    // If no weekly status, check if there are any submitted timesheets for this week
+    const timesheets = await Timesheet.findAll({
+      where: {
+        employeeId,
+        date: {
+          [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
+        }
+      }
+    });
+
+    // If there are no timesheets at all, or all timesheets are drafts, status is active
+    if (!timesheets.length || timesheets.every(t => t.status === 'draft')) {
+      return res.json({
+        status: 'active'
+      });
+    }
+
+    // If any timesheet is submitted, status is pending
+    if (timesheets.some(t => t.status === 'submitted')) {
+      return res.json({
+        status: 'pending'
+      });
+    }
+
+    // If we get here, check if all timesheets are approved or denied
+    const allApproved = timesheets.every(t => t.status === 'approved');
+    const allDenied = timesheets.every(t => t.status === 'denied');
+
+    return res.json({
+      status: allApproved ? 'approved' : (allDenied ? 'denied' : 'active')
+    });
+
+  } catch (error) {
+    console.error('Error in getTimesheetStatus:', error);
+    next(error);
+  }
+};
+
 module.exports = {
   getClockStatus,
   clockIn,
   clockOut,
   getTimesheetEntries,
   submitTimesheet,
-  getMyProfile
+  getMyProfile,
+  getTimesheetStatus
 }; 

@@ -29,6 +29,17 @@ const Timesheet = () => {
   const [weeklyGross, setWeeklyGross] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [timesheetStatus, setTimesheetStatus] = useState('active');
+
+  const fetchTimesheetStatus = useCallback(async () => {
+    try {
+      const response = await api.get('/api/employee-self-service/me/timesheet-status');
+      setTimesheetStatus(response.data.status);
+    } catch (err) {
+      console.error('Failed to fetch timesheet status:', err);
+      // Don't set error state here as it's not critical
+    }
+  }, []);
 
   const fetchTimesheetData = useCallback(async () => {
     if (!employeeId) {
@@ -51,6 +62,9 @@ const Timesheet = () => {
       } else {
         setTimesheetEntries([]);
       }
+      
+      // Fetch the timesheet status after getting entries
+      await fetchTimesheetStatus();
     } catch (err) {
       console.error('Failed to fetch timesheet data:', err);
       setError(`Failed to load timesheet: ${err.response?.data?.message || err.message}`);
@@ -59,7 +73,7 @@ const Timesheet = () => {
     } finally {
       setLoading(false);
     }
-  }, [employeeId, onDataLoad]);
+  }, [employeeId, onDataLoad, fetchTimesheetStatus]);
 
   useEffect(() => {
     if (employeeId) { // Only fetch if employeeId is available
@@ -143,7 +157,9 @@ const Timesheet = () => {
         <h2>Weekly Timesheet</h2>
         <p className="pay-period-info">
           Pay Period: {payPeriod ? new Date(payPeriod.startDate).toLocaleDateString() : 'N/A'} - {payPeriod ? new Date(payPeriod.endDate).toLocaleDateString() : 'N/A'} 
-          (Status: {payPeriod ? payPeriod.status : 'N/A'})
+          <span className={`status-badge ${timesheetStatus}`}>
+            Status: {timesheetStatus.charAt(0).toUpperCase() + timesheetStatus.slice(1)}
+          </span>
         </p>
 
         <div className="timesheet-details-list">

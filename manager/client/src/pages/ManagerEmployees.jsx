@@ -233,19 +233,34 @@ function ManagerEmployees() {
     const url = `${API_BASE_URL}/employees/${employeeId}/timesheets/weekly/${endpointAction}`;
 
     try {
-      const response = await fetch(url, { method: 'PATCH' });
+      const response = await fetch(url, { 
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.message || `Failed to ${actionType} timesheet.`);
       }
+
+      // Update local state
       setEmployeesTimesheets(prev =>
         prev.map(emp => {
           if (emp.employeeId === employeeId) {
-            return { ...emp, approvalStatus: actionType === 'approve' ? 'Approved' : 'Denied' };
+            return { 
+              ...emp, 
+              approvalStatus: actionType === 'approve' ? 'Approved' : 'Denied'
+            };
           }
           return emp;
         })
       );
+
+      // Fetch updated data to ensure everything is in sync
+      fetchTimesheets();
+      
       console.log(`Timesheet ${actionType}d successfully for ${employeeName}.`);
     } catch (err) {
       console.error(`Error ${actionType}ing timesheet:`, err);
@@ -312,7 +327,7 @@ function ManagerEmployees() {
                                 title={isApprovedOrDenied ? `Timesheet already ${employee.approvalStatus.toLowerCase()}` : (isFired ? 'Cannot approve fired employee timesheet' : 'Approve Timesheet')}
                                 className="button button-success button-small"
                                 onClick={(e) => handleApproveClick(e, employee.employeeId, employee.name)}
-                                disabled={isApprovedOrDenied || isFired}
+                                disabled={employee.approvalStatus !== 'Pending'}
                              >
                                 <FaCheckCircle /> Approve
                              </button>
@@ -320,7 +335,7 @@ function ManagerEmployees() {
                                 title={isApprovedOrDenied ? `Timesheet already ${employee.approvalStatus.toLowerCase()}` : (isFired ? 'Cannot deny fired employee timesheet' : 'Deny Timesheet')}
                                 className="button button-warning button-small"
                                 onClick={(e) => handleDenyClick(e, employee.employeeId, employee.name)}
-                                disabled={isApprovedOrDenied || isFired}
+                                disabled={employee.approvalStatus !== 'Pending'}
                              >
                                 <FaTimesCircle /> Deny
                              </button>

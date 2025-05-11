@@ -1,7 +1,8 @@
 const db = require('../models');
-const { Employee, TimesheetEntry, WeeklyTimesheetStatus, Timesheet } = db;
+const { Employee, TimesheetEntry, WeeklyTimesheetStatus, Timesheet, TimesheetNotification } = db;
 const { Op } = require('sequelize');
 const moment = require('moment-timezone'); // Ensure moment-timezone is imported
+const { sequelize } = require('../config/database');
 
 /**
  * Calculates the start (Monday) and end (Sunday) dates of the current week in America/New_York.
@@ -77,13 +78,19 @@ const getWeeklyTimesheets = async () => {
             attributes: ['id', 'name', 'hourly_rate', 'email', 'phone']
         });
 
-        // Get all timesheet records for the week that are submitted
+        // Get all timesheet records for the week (not just submitted ones)
         const timesheetRecords = await Timesheet.findAll({
             where: {
                 date: {
                     [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
-                },
-                status: 'submitted'
+                }
+            }
+        });
+
+        // Get weekly status records
+        const weeklyStatuses = await WeeklyTimesheetStatus.findAll({
+            where: {
+                weekStartDate: weekStartDateOnly
             }
         });
 
@@ -104,14 +111,19 @@ const getWeeklyTimesheets = async () => {
             // Initialize all days with default values
             daysOfWeek.forEach(day => {
                 timesheet[day] = {
-                    hoursWorked: 0.000,  // Initialize to 3 decimal places
-                    dailyPay: 0.00       // Initialize to 2 decimal places for currency
+                    hoursWorked: 0.000,
+                    dailyPay: 0.00
                 };
             });
 
             // Find this employee's timesheet records
             const employeeRecords = timesheetRecords.filter(record => 
                 record.employeeId === employeeData.id
+            );
+
+            // Find weekly status for this employee
+            const weeklyStatus = weeklyStatuses.find(status => 
+                status.employeeId === employeeData.id
             );
 
             // Process each record
@@ -123,14 +135,25 @@ const getWeeklyTimesheets = async () => {
                 const dailyPay = hours * hourlyRate;
 
                 timesheet[dayName] = {
-                    hoursWorked: parseFloat(hours.toFixed(3)),  // Ensure 3 decimal places
-                    dailyPay: parseFloat(dailyPay.toFixed(2))   // Ensure 2 decimal places for currency
+                    hoursWorked: parseFloat(hours.toFixed(3)),
+                    dailyPay: parseFloat(dailyPay.toFixed(2))
                 };
                 weeklyGross += dailyPay;
             });
 
-            // Set approval status based on whether there are timesheet records
-            const approvalStatus = employeeRecords.length > 0 ? 'Pending' : 'Not Submitted';
+            // Set approval status based on weekly status record or timesheet records
+            let approvalStatus = 'Not Submitted';
+            if (weeklyStatus) {
+                approvalStatus = weeklyStatus.status;
+            } else if (employeeRecords.length > 0) {
+                if (employeeRecords.every(record => record.status === 'approved')) {
+                    approvalStatus = 'Approved';
+                } else if (employeeRecords.every(record => record.status === 'denied')) {
+                    approvalStatus = 'Denied';
+                } else if (employeeRecords.some(record => record.status === 'submitted')) {
+                    approvalStatus = 'Pending';
+                }
+            }
 
             return {
                 employeeId: employeeData.id,
@@ -138,7 +161,7 @@ const getWeeklyTimesheets = async () => {
                 hourlyWage: parseFloat(employeeData.hourly_rate) || 0,
                 approvalStatus: approvalStatus,
                 timesheet: timesheet,
-                weeklyGross: parseFloat(weeklyGross.toFixed(2))  // Ensure 2 decimal places for currency
+                weeklyGross: parseFloat(weeklyGross.toFixed(2))
             };
         });
 
@@ -157,44 +180,74 @@ const getWeeklyTimesheets = async () => {
  * @returns {Promise<object>} The updated or created status record.
  */
 const updateWeeklyTimesheetStatus = async (employeeId, status) => {
-    const { weekStartDateOnly } = getCurrentWeekDates();
+    const { startDate, endDate, weekStartDateOnly } = getCurrentWeekDates();
 
     if (!['Approved', 'Denied'].includes(status)) {
         throw new Error('Invalid status provided.');
     }
 
     try {
-        // REMOVED 'is_active' from attributes
+        // Find the employee
         const employee = await Employee.findByPk(employeeId, { attributes: ['id'] }); 
         if (!employee) {
             throw new Error(`Employee with ID ${employeeId} not found.`);
         }
-        // REMOVED Check for inactive employee
 
-        // REMOVED 'is_active' from attributes
-        const statusRecord = await WeeklyTimesheetStatus.findOne({
-            where: {
+        // Start a transaction to ensure all updates succeed or fail together
+        const result = await sequelize.transaction(async (t) => {
+            // Update all timesheet records for the week
+            const timesheets = await Timesheet.findAll({
+                where: {
+                    employeeId,
+                    date: {
+                        [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
+                    },
+                    status: 'submitted' // Only update submitted timesheets
+                },
+                transaction: t
+            });
+
+            if (timesheets.length === 0) {
+                throw new Error('No submitted timesheets found for this week');
+            }
+
+            // Update all timesheet records
+            await Promise.all(timesheets.map(async (timesheet) => {
+                await timesheet.update({
+                    status: status.toLowerCase(),
+                    reviewedAt: new Date()
+                }, { transaction: t });
+
+                // Create notification for the employee
+                await TimesheetNotification.create({
+                    employeeId,
+                    timesheetId: timesheet.id,
+                    type: status.toLowerCase() === 'approved' ? 'approval' : 'denial',
+                    message: `Your timesheet for ${timesheet.date} has been ${status.toLowerCase()}.`,
+                }, { transaction: t });
+            }));
+
+            // Always update the weekly status record
+            await WeeklyTimesheetStatus.upsert({
+                employeeId,
                 weekStartDate: weekStartDateOnly,
-                employeeId: employeeId
-            },
-            attributes: ['id', 'status']
+                status: status
+            }, { transaction: t });
+
+            // Fetch and return the updated status
+            return await WeeklyTimesheetStatus.findOne({
+                where: {
+                    employeeId,
+                    weekStartDate: weekStartDateOnly
+                },
+                transaction: t
+            });
         });
 
-        if (statusRecord) {
-            statusRecord.status = status;
-            await statusRecord.save();
-            return statusRecord;
-        } else {
-            const newStatus = await WeeklyTimesheetStatus.create({
-                weekStartDate: weekStartDateOnly,
-                employeeId: employeeId,
-                status: status
-            });
-            return newStatus;
-        }
+        return result;
     } catch (error) {
-        console.error("Error updating weekly timesheet status:", error);
-        throw new Error('Failed to update weekly timesheet status.');
+        console.error('Error in updateWeeklyTimesheetStatus:', error);
+        throw error;
     }
 };
 
@@ -204,7 +257,5 @@ const updateWeeklyTimesheetStatus = async (employeeId, status) => {
 module.exports = {
     getWeeklyTimesheets,
     updateWeeklyTimesheetStatus,
-    // fireEmployee, // Commenting out as they might have been deleted and are not core to current issue
-    // reinstateEmployee,
-    // addEmployee
+    getCurrentWeekDates
 };

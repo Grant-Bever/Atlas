@@ -15,6 +15,16 @@ const TimeTracking = ({ employeeId, onClockAction }) => { // Added props
   const [clockData, setClockData] = useState({ isClockedIn: false, lastEvent: null, history: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [timesheetStatus, setTimesheetStatus] = useState('active');
+
+  const fetchTimesheetStatus = useCallback(async () => {
+    try {
+      const response = await api.get('/api/employee-self-service/me/timesheet-status');
+      setTimesheetStatus(response.data.status);
+    } catch (err) {
+      console.error('Failed to fetch timesheet status:', err);
+    }
+  }, []);
 
   const fetchClockData = useCallback(async () => {
     // No explicit employeeId needed for /me/ routes if auth token is used
@@ -41,10 +51,11 @@ const TimeTracking = ({ employeeId, onClockAction }) => { // Added props
 
   useEffect(() => {
     fetchClockData();
+    fetchTimesheetStatus();
     // Optional: Poll for status updates (consider if really needed or use WebSockets for real-time)
     // const intervalId = setInterval(fetchClockData, 60000);
     // return () => clearInterval(intervalId);
-  }, [fetchClockData]);
+  }, [fetchClockData, fetchTimesheetStatus]);
 
   const handleClockIn = async () => {
     setError(null);
@@ -79,6 +90,7 @@ const TimeTracking = ({ employeeId, onClockAction }) => { // Added props
 
   const { isClockedIn, lastEvent, history } = clockData;
   const isCurrentlyClockedIn = isClockedIn;
+  const isTimesheetLocked = timesheetStatus === 'submitted' || timesheetStatus === 'approved' || timesheetStatus === 'denied';
 
   return (
     <div className="time-tracking">
@@ -90,22 +102,27 @@ const TimeTracking = ({ employeeId, onClockAction }) => { // Added props
           <div className="clock-buttons">
             <button 
               onClick={handleClockIn} 
-              disabled={isCurrentlyClockedIn || loading}
-              className={`clock-button ${(isCurrentlyClockedIn) ? 'disabled' : 'clock-in'}`}
+              disabled={isCurrentlyClockedIn || loading || isTimesheetLocked}
+              className={`clock-button ${(isCurrentlyClockedIn || isTimesheetLocked) ? 'disabled' : 'clock-in'}`}
+              title={isTimesheetLocked ? 'Cannot clock in until next pay period' : ''}
             >
               Clock In
             </button>
             <button 
               onClick={handleClockOut} 
-              disabled={!isCurrentlyClockedIn || loading}
-              className={`clock-button ${(!isCurrentlyClockedIn) ? 'disabled' : 'clock-out'}`}
+              disabled={!isCurrentlyClockedIn || loading || isTimesheetLocked}
+              className={`clock-button ${(!isCurrentlyClockedIn || isTimesheetLocked) ? 'disabled' : 'clock-out'}`}
+              title={isTimesheetLocked ? 'Cannot clock out until next pay period' : ''}
             >
               Clock Out
             </button>
           </div>
-            {lastEvent?.eventType === 'CLOCK_OUT' && isSameDay(lastEvent?.timestamp, new Date()) && 
-              <p className="clock-message">You are currently clocked out.</p>
-            }
+          {lastEvent?.eventType === 'CLOCK_OUT' && isSameDay(lastEvent?.timestamp, new Date()) && 
+            <p className="clock-message">You are currently clocked out.</p>
+          }
+          {isTimesheetLocked && 
+            <p className="clock-message warning">Time tracking is locked until next pay period.</p>
+          }
         </div>
       </div>
 

@@ -106,15 +106,14 @@ const submitTimesheetForPayPeriod = async (employeeId, payPeriodId) => {
     throw new Error('Employee ID and Pay Period ID are required.');
   }
 
-  // 1. Update daily Timesheet entries to 'submitted'
+  // 1. Update all Timesheet entries to 'submitted' for this pay period
   console.log('DEBUG: Updating Timesheet entries to submitted status');
   const [numberOfAffectedRows, affectedRows] = await Timesheet.update(
     { status: 'submitted' },
     {
       where: {
         employeeId: employeeId,
-        payPeriodId: payPeriodId,
-        status: 'draft'
+        payPeriodId: payPeriodId
       },
       returning: true
     }
@@ -164,20 +163,19 @@ const submitTimesheetForPayPeriod = async (employeeId, payPeriodId) => {
         wasCreated: created
       });
 
-      // Verify the record exists
+      // Verify the record exists and has the correct status
       const verifyStatus = await WeeklyTimesheetStatus.findOne({
         where: {
           employeeId: employeeId,
           weekStartDate: effectiveWeekStartDate
-        },
-        raw: true
+        }
       });
       
-      if (!verifyStatus) {
-        throw new Error('Failed to create/verify WeeklyTimesheetStatus record');
+      if (!verifyStatus || verifyStatus.status !== 'Pending') {
+        throw new Error('Failed to create/verify WeeklyTimesheetStatus record with correct status');
       }
       
-      console.log('DEBUG: Verified WeeklyTimesheetStatus record exists:', verifyStatus);
+      console.log('DEBUG: Verified WeeklyTimesheetStatus record exists:', verifyStatus.get({ plain: true }));
     } catch (error) {
       console.error('ERROR: Failed to create/update WeeklyTimesheetStatus:', error);
       throw new Error('Failed to update timesheet status');

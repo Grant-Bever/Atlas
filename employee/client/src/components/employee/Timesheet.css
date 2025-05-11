@@ -160,8 +160,45 @@ button[type="submit"]:hover {
 
 .pay-period-info {
   font-size: 0.9em;
-  color: #a0aec0; /* Match layout paragraph text */
+  color: #a0aec0;
   margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-badge {
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-weight: 500;
+  margin-left: 10px;
+}
+
+.status-badge.active {
+  background-color: #2d3748;
+  color: #a0aec0;
+}
+
+.status-badge.submitted,
+.status-badge.pending {
+  background-color: #553c9a;
+  color: #e9d8fd;
+}
+
+.status-badge.approved {
+  background-color: #2f855a;
+  color: #c6f6d5;
+}
+
+.status-badge.denied {
+  background-color: #9b2c2c;
+  color: #fed7d7;
+}
+
+.clock-message.warning {
+  color: #f56565;
+  margin-top: 10px;
+  font-weight: 500;
 }
 
 .timesheet-details-list {

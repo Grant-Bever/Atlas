@@ -30,6 +30,9 @@ router.get('/me/profile', authenticateEmployee, employeeTimesheetController.getM
 // Clock Status
 router.get('/me/clock-status', authenticateEmployee, employeeTimesheetController.getClockStatus);
 
+// Timesheet Status
+router.get('/me/timesheet-status', authenticateEmployee, employeeTimesheetController.getTimesheetStatus);
+
 // Clock In
 router.post('/me/clock-in', authenticateEmployee, employeeTimesheetController.clockIn);
 
