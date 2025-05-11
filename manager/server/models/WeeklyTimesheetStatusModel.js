@@ -5,7 +5,7 @@ module.exports = (sequelize, DataTypes) => {
     static associate(models) {
       // A status record belongs to one Employee
       WeeklyTimesheetStatus.belongsTo(models.Employee, {
-        foreignKey: 'employee_id',
+        foreignKey: 'employeeId',
         as: 'employee'
       });
     }
@@ -17,16 +17,17 @@ module.exports = (sequelize, DataTypes) => {
       autoIncrement: true,
       allowNull: false
     },
-    employee_id: {
+    employeeId: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      field: 'employee_id',
       references: {
-        model: 'employees', // table name
+        model: 'employees',
         key: 'id'
       }
     },
     weekStartDate: {
-      type: DataTypes.DATEONLY, // Store only the date (YYYY-MM-DD)
+      type: DataTypes.DATEONLY,
       allowNull: false,
       field: 'week_start_date'
     },

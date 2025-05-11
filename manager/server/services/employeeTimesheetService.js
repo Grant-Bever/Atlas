@@ -1,4 +1,4 @@
-const { Timesheet, Employee, ClockEvent, PayPeriod } = require('../models');
+const { Timesheet, Employee, ClockEvent, PayPeriod, WeeklyTimesheetStatus } = require('../models');
 const payPeriodService = require('./payPeriodService');
 const clockService = require('./clockService');
 const { Op } = require('sequelize');
@@ -100,21 +100,90 @@ const getTimesheetEntriesForPayPeriod = async (employeeId, payPeriodId) => {
 };
 
 const submitTimesheetForPayPeriod = async (employeeId, payPeriodId) => {
+  console.log('DEBUG: submitTimesheetForPayPeriod called with:', { employeeId, payPeriodId });
+  
   if (!employeeId || !payPeriodId) {
     throw new Error('Employee ID and Pay Period ID are required.');
   }
 
+  // 1. Update daily Timesheet entries to 'submitted'
+  console.log('DEBUG: Updating Timesheet entries to submitted status');
   const [numberOfAffectedRows, affectedRows] = await Timesheet.update(
     { status: 'submitted' },
     {
       where: {
         employeeId: employeeId,
         payPeriodId: payPeriodId,
-        status: 'draft', // Only submit draft entries
+        status: 'draft'
       },
-      returning: true, // Optional: if you want the updated rows back
+      returning: true
     }
   );
+  console.log('DEBUG: Updated timesheet entries count:', numberOfAffectedRows);
+
+  if (numberOfAffectedRows > 0) {
+    // 2. Fetch the pay period to get its start date
+    console.log('DEBUG: Fetching pay period details');
+    const payPeriod = await payPeriodService.getPayPeriodById(payPeriodId);
+    console.log('DEBUG: Pay period details:', {
+      id: payPeriodId,
+      startDate: payPeriod?.startDate,
+      endDate: payPeriod?.endDate,
+      status: payPeriod?.status
+    });
+
+    if (!payPeriod || !payPeriod.startDate) {
+      console.error(`SERVICE: submitTimesheetForPayPeriod - PayPeriod ${payPeriodId} not found or has no startDate.`);
+      throw new Error('Pay period not found or invalid');
+    }
+
+    // Calculate the week start date (Saturday)
+    const payPeriodStartMoment = moment(payPeriod.startDate).tz('America/New_York');
+    // Use the pay period start date directly since it's already aligned with the week start
+    const effectiveWeekStartDate = payPeriodStartMoment.format('YYYY-MM-DD');
+    
+    console.log('DEBUG: Date calculations:', {
+      payPeriodStart: payPeriod.startDate,
+      payPeriodStartAsMoment: payPeriodStartMoment.format(),
+      effectiveWeekStartDate,
+      currentTime: moment().tz('America/New_York').format()
+    });
+
+    try {
+      // Create or update the WeeklyTimesheetStatus record
+      const [statusRecord, created] = await WeeklyTimesheetStatus.upsert({
+        employeeId: employeeId,
+        weekStartDate: effectiveWeekStartDate,
+        status: 'Pending'
+      }, {
+        returning: true
+      });
+
+      console.log('DEBUG: WeeklyTimesheetStatus record:', {
+        record: statusRecord.get({ plain: true }),
+        wasCreated: created
+      });
+
+      // Verify the record exists
+      const verifyStatus = await WeeklyTimesheetStatus.findOne({
+        where: {
+          employeeId: employeeId,
+          weekStartDate: effectiveWeekStartDate
+        },
+        raw: true
+      });
+      
+      if (!verifyStatus) {
+        throw new Error('Failed to create/verify WeeklyTimesheetStatus record');
+      }
+      
+      console.log('DEBUG: Verified WeeklyTimesheetStatus record exists:', verifyStatus);
+    } catch (error) {
+      console.error('ERROR: Failed to create/update WeeklyTimesheetStatus:', error);
+      throw new Error('Failed to update timesheet status');
+    }
+  }
+
   return { submittedCount: numberOfAffectedRows };
 };
 

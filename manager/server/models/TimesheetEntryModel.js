@@ -8,6 +8,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'employee_id',
         as: 'employee'
       });
+      // An entry belongs to one Timesheet
+      TimesheetEntry.belongsTo(models.Timesheet, {
+        foreignKey: 'timesheetId',
+        as: 'timesheet'
+      });
     }
   }
   TimesheetEntry.init({
@@ -22,6 +27,14 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       references: {
         model: 'employees', // table name
+        key: 'id'
+      }
+    },
+    timesheetId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'timesheets',
         key: 'id'
       }
     },

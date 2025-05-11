@@ -304,7 +304,6 @@ function ManagerEmployees() {
                         <div className={`approval-status ${employee.approvalStatus.toLowerCase()}`}>
                             Timesheet: {employee.approvalStatus}
                         </div>
-                        {isFired && <span className="fired-label"> (Fired)</span>}
                     </div>
                     <div className="header-right"> {/* Group buttons and menu */}
                          {/* NEW: Timesheet Approval Actions */}
@@ -326,7 +325,8 @@ function ManagerEmployees() {
                                 <FaTimesCircle /> Deny
                              </button>
                          </div>
-                         {/* Existing Action Menu */}
+                         {/* Action Menu REMOVED as per request */}
+                         {/* 
                          <div className="employee-action-menu-container action-menu-container">
                             <button
                                 onClick={(e) => handleEmployeeMenuToggle(e, employee.employeeId)}
@@ -335,7 +335,6 @@ function ManagerEmployees() {
                             </button>
                             {isMenuOpen && (
                                 <div className="action-menu">
-                                   {/* <button onClick={(e) => handleEditEmployee(e, employee.employeeId)}><FaEdit /> Edit Employee</button> */}
                                    {employee.isActive ? (
                                        <button onClick={(e) => handleFireClick(e, employee.employeeId, employee.name)} className="danger">
                                            <FaTrashAlt /> Fire Employee
@@ -348,6 +347,7 @@ function ManagerEmployees() {
                                 </div>
                             )}
                          </div>
+                         */}
                     </div>
                 </div>
                 
@@ -355,18 +355,15 @@ function ManagerEmployees() {
                 <div className="timesheet-list">
                   <div className="timesheet-header-row">
                      <span>Day</span>
-                     <span>Clock In</span>
-                     <span>Clock Out</span>
+                     <span>Hours Worked</span>
                      <span>Daily Pay</span>
                   </div>
                   {daysOfWeek.map(day => {
-                    const dayData = employee.timesheet[day] || { clockIn: '-', clockOut: '-', dailyPay: 0 };
+                    const dayData = employee.timesheet[day] || { hoursWorked: 0.000, dailyPay: 0.00 };
                     return (
                       <div key={day} className="timesheet-item">
                         <span>{day}</span>
-                        {/* Format the times */}
-                        <span>{dayData.clockIn !== '-' ? formatTimeTo12Hour(dayData.clockIn) : '-'}</span>
-                        <span>{dayData.clockOut !== '-' ? formatTimeTo12Hour(dayData.clockOut) : '-'}</span>
+                        <span>{dayData.hoursWorked.toFixed(3)}</span>
                         <span>${dayData.dailyPay.toFixed(2)}</span>
                       </div>
                     );

@@ -72,6 +72,10 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'payPeriodId',
       as: 'payPeriod'
     });
+    Timesheet.hasMany(models.TimesheetEntry, {
+      foreignKey: 'timesheetId',
+      as: 'entries'
+    });
   };
 
   return Timesheet;
