@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false
     },
     hoursWorked: {
-      type: DataTypes.DECIMAL(4, 2),
+      type: DataTypes.DECIMAL(6, 3),
       allowNull: false,
       validate: {
         min: 0,

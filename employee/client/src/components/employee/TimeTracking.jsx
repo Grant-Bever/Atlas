@@ -1,109 +1,110 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import api from '../../utils/api';
 import './TimeTracking.css';
+import moment from 'moment-timezone'; // For better date formatting
 
 // Helper function to check if two date objects are the same calendar day
 const isSameDay = (date1, date2) => {
   if (!date1 || !date2) return false;
-  const d1 = (date1 instanceof Date) ? date1 : new Date(date1);
-  const d2 = (date2 instanceof Date) ? date2 : new Date(date2);
-  if (isNaN(d1.getTime()) || isNaN(d2.getTime())) return false;
-  return d1.getFullYear() === d2.getFullYear() &&
-         d1.getMonth() === d2.getMonth() &&
-         d1.getDate() === d2.getDate();
+  const d1 = moment(date1).tz('America/New_York'); // Consistent timezone
+  const d2 = moment(date2).tz('America/New_York');
+  return d1.isValid() && d2.isValid() && d1.isSame(d2, 'day');
 };
 
-const TimeTracking = () => {
-  const [status, setStatus] = useState(null);
-  const [history, setHistory] = useState([]);
+const TimeTracking = ({ employeeId, onClockAction }) => { // Added props
+  const [clockData, setClockData] = useState({ isClockedIn: false, lastEvent: null, history: [] });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchStatus = async () => {
+  const fetchClockData = useCallback(async () => {
+    // No explicit employeeId needed for /me/ routes if auth token is used
+    setLoading(true);
+    setError(null);
     try {
-      const response = await api.get('/api/employees/clock-status');
-      setStatus(response.data);
+      const response = await api.get('/api/employee-self-service/me/clock-status');
+      const statusData = response.data;
+      // Ensure statusData.recentEvents is an array, default to empty if not
+      const eventHistory = Array.isArray(statusData.recentEvents) ? statusData.recentEvents : [];
+      
+      setClockData({ 
+        isClockedIn: statusData.isClockedIn,
+        lastEvent: statusData.lastEvent,
+        history: eventHistory // Use the recentEvents from API for history
+      });
     } catch (err) {
-      setError('Failed to fetch status');
-    }
-  };
-
-  const fetchHistory = async () => {
-    try {
-      const response = await api.get('/api/employees/clock-history');
-      setHistory(response.data);
-      setLoading(false);
-    } catch (err) {
-      setError('Failed to fetch history');
+      console.error('Failed to fetch clock data:', err);
+      setError(`Failed to fetch clock status: ${err.response?.data?.message || err.message}`);
+    } finally {
       setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchStatus();
-    fetchHistory();
-    // Poll for status updates every minute
-    const intervalId = setInterval(fetchStatus, 60000);
-    return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    fetchClockData();
+    // Optional: Poll for status updates (consider if really needed or use WebSockets for real-time)
+    // const intervalId = setInterval(fetchClockData, 60000);
+    // return () => clearInterval(intervalId);
+  }, [fetchClockData]);
+
   const handleClockIn = async () => {
+    setError(null);
     try {
-      await api.post('/api/employees/clock-in');
-      fetchStatus();
-      fetchHistory();
+      await api.post('/api/employee-self-service/me/clock-in');
+      await fetchClockData(); // Refetch all clock data
+      if (onClockAction) onClockAction(); // Notify parent to refresh timesheet
     } catch (err) {
-      setError('Failed to clock in');
+      console.error('Clock In Error:', err);
+      setError(`Clock In Failed: ${err.response?.data?.message || err.message}`);
     }
   };
 
   const handleClockOut = async () => {
+    setError(null);
     try {
-      await api.post('/api/employees/clock-out');
-      fetchStatus();
-      fetchHistory();
+      await api.post('/api/employee-self-service/me/clock-out');
+      await fetchClockData(); // Refetch all clock data
     } catch (err) {
-      setError('Failed to clock out');
+      console.error('Clock Out Error:', err);
+      setError(`Clock Out Failed: ${err.response?.data?.message || err.message}`);
+    } finally {
+      // Ensure onClockAction is called to attempt a refresh of the timesheet,
+      // regardless of the clock-out API call's success or failure.
+      // If data was saved before an error, the timesheet should reflect it.
+      // If data saving failed, the timesheet will refresh but show existing data.
+      if (onClockAction) onClockAction();
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  // Don't show component error here, let parent handle maybe
-  // if (error) return <div className="error">{error}</div>; 
+  if (loading) return <div className="time-tracking status-section">Loading clock status...</div>;
 
-  // Determine if the last action was clocking out today
-  const now = new Date();
-  const lastEvent = status?.lastEvent;
-  const isClockedOutToday = lastEvent?.eventType === 'CLOCK_OUT' && isSameDay(lastEvent?.timestamp, now);
+  const { isClockedIn, lastEvent, history } = clockData;
+  const isCurrentlyClockedIn = isClockedIn;
 
   return (
     <div className="time-tracking">
       <div className="status-section">
         <h2>Time Tracking</h2>
-        {error && <div className="error time-tracking-error">{error}</div>} {/* Show error within component */}
+        {error && <div className="error time-tracking-error">{error}</div>}
         <div className="current-status">
-          <p>Status: {status?.isClockedIn ? 'Clocked In' : 'Clocked Out'}</p>
+          <p>Status: {isCurrentlyClockedIn ? 'Clocked In' : 'Clocked Out'}</p>
           <div className="clock-buttons">
             <button 
               onClick={handleClockIn} 
-              // Disable if already clocked in OR if clocked out today
-              disabled={status?.isClockedIn || isClockedOutToday}
-              className={`clock-button ${(status?.isClockedIn || isClockedOutToday) ? 'disabled' : 'clock-in'}`}
+              disabled={isCurrentlyClockedIn || loading}
+              className={`clock-button ${(isCurrentlyClockedIn) ? 'disabled' : 'clock-in'}`}
             >
               Clock In
             </button>
             <button 
               onClick={handleClockOut} 
-              // Disable if not clocked in OR if clocked out today
-              disabled={!status?.isClockedIn || isClockedOutToday}
-              className={`clock-button ${(!status?.isClockedIn || isClockedOutToday) ? 'disabled' : 'clock-out'}`}
+              disabled={!isCurrentlyClockedIn || loading}
+              className={`clock-button ${(!isCurrentlyClockedIn) ? 'disabled' : 'clock-out'}`}
             >
               Clock Out
             </button>
           </div>
-            {/* Optional: Message shown when buttons disabled due to clock out */} 
-            {isClockedOutToday && 
-              <p className="clock-message">Clocked out for the day.</p>
+            {lastEvent?.eventType === 'CLOCK_OUT' && isSameDay(lastEvent?.timestamp, new Date()) && 
+              <p className="clock-message">You are currently clocked out.</p>
             }
         </div>
       </div>
@@ -111,10 +112,11 @@ const TimeTracking = () => {
       <div className="history-section">
         <h3>Recent Activity</h3>
         <div className="history-list">
+          {history.length === 0 && !loading && <p>No recent clock events.</p>}
           {history.map(event => (
-            <div key={event.id} className="history-item">
+            <div key={event.id || event.timestamp} className="history-item">
               <span>{event.eventType === 'CLOCK_IN' ? '→ In' : '← Out'}</span>
-              <span>{new Date(event.timestamp).toLocaleString()}</span>
+              <span>{moment(event.timestamp).tz('America/New_York').format('M/D/YYYY, h:mm:ss A')}</span>
             </div>
           ))}
         </div>

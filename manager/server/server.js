@@ -9,6 +9,7 @@ const totalsRoutes = require('./routes/totalsRoutes'); // <-- Add totals routes
 const employeeRoutes = require('./routes/employeeRoutes'); // <-- Import employee routes
 const inventoryRoutes = require('./routes/inventoryRoutes'); // <-- Import inventory routes
 const customerRoutes = require('./routes/customerRoutes');
+const employeeSelfServiceRoutes = require('./routes/employeeSelfServiceRoutes'); // <-- IMPORT NEW ROUTES
 // Add other route imports here as you create them (e.g., inventoryRoutes)
 
 const app = express();
@@ -24,6 +25,7 @@ app.use('/api/totals', totalsRoutes); // <-- Mount totals routes
 app.use('/api/employees', employeeRoutes); // <-- Mount employee routes
 app.use('/api/inventory', inventoryRoutes); // <-- Mount inventory routes
 app.use('/api/customer', customerRoutes);
+app.use('/api/employee-self-service', employeeSelfServiceRoutes); // <-- MOUNT NEW ROUTES
 // app.use('/api/inventory', inventoryRoutes); // Example for other routes
 // Add other routes here...
 

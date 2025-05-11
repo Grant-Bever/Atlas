@@ -1,238 +1,198 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import api from '../../utils/api';
 import './Timesheet.css';
-import { formatTimeTo12Hour } from '../../utils/formatTime'; // Assuming you have this utility
+import moment from 'moment';
 
 // Define days of the week
-const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+// const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']; // Not directly used anymore for rows
+
+// Helper to format date to YYYY-MM-DD for matching with backend data
+// const formatDateToYMD = (date) => {
+//   if (!date) return '';
+//   const d = new Date(date);
+//   let month = '' + (d.getMonth() + 1);
+//   let day = '' + d.getDate();
+//   const year = d.getFullYear();
+// 
+//   if (month.length < 2) month = '0' + month;
+//   if (day.length < 2) day = '0' + day;
+// 
+//   return [year, month, day].join('-');
+// };
 
 const Timesheet = () => {
-  // --- Mock Data & Placeholders ---
-  const MOCK_HOURLY_RATE = 20.00; // Placeholder
-  const MOCK_PAY_PERIOD = {
-    startDate: new Date(new Date().setDate(new Date().getDate() - new Date().getDay())).toISOString(),
-    endDate: new Date(new Date().setDate(new Date().getDate() - new Date().getDay() + 6)).toISOString(),
-    status: 'Open'
-  };
+  const { employeeId, hourlyRate, needsRefresh, onDataLoad } = useOutletContext();
 
-  // Simulate initial event data for the week
-  const simulateInitialEventData = () => {
-    const data = {};
-    let weeklyGross = 0;
-    daysOfWeek.forEach((day, index) => {
-      data[day] = []; // Initialize each day with an empty array
-      // Simulate some data for past days (e.g., Mon-Wed)
-      if (index > 0 && index < 4) { 
-        const hours = 7 + Math.random() * 2;
-        const dailyPay = hours * MOCK_HOURLY_RATE;
-        weeklyGross += dailyPay;
-        // Add simulated events
-        data[day].push({ type: 'IN', time: '09:00' });
-        data[day].push({ type: 'OUT', time: `${(9 + hours).toFixed(0).padStart(2, '0')}:00` });
-      }
-    });
-    // Calculate initial weekly gross based *only* on the simulation
-    // This won't update dynamically with clock events in this mock version.
-    const calculatedWeeklyGross = Object.values(data).reduce((acc, dayEvents) => {
-        let dailyHours = 0;
-        for(let i = 0; i < dayEvents.length; i += 2) {
-            if(dayEvents[i]?.type === 'IN' && dayEvents[i+1]?.type === 'OUT') {
-                try {
-                    const start = new Date(`1970-01-01T${dayEvents[i].time}:00`);
-                    const end = new Date(`1970-01-01T${dayEvents[i+1].time}:00`);
-                    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-                        const diffMs = end - start;
-                        if (diffMs > 0) dailyHours += diffMs / (1000 * 60 * 60);
-                    }
-                } catch (e) { /* ignore calc error */ }
-            }
-        }
-        return acc + (dailyHours * MOCK_HOURLY_RATE);
-    }, 0);
-
-    return { eventData: data, weeklyGross: calculatedWeeklyGross.toFixed(2) };
-  };
-
-  const { eventData: initialEventData, weeklyGross: initialWeeklyGross } = simulateInitialEventData();
-  const [dailyEvents, setDailyEvents] = useState(initialEventData);
-  const [mockWeeklyGross, setMockWeeklyGross] = useState(initialWeeklyGross);
-  // --- End Mock Data ---
-
-  // Keep existing state
-  const [payPeriod, setPayPeriod] = useState(MOCK_PAY_PERIOD);
-  const [loading, setLoading] = useState(false);
+  const [payPeriod, setPayPeriod] = useState(null);
+  const [timesheetEntries, setTimesheetEntries] = useState([]);
+  const [weeklyGross, setWeeklyGross] = useState(0);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [clockStatus, setClockStatus] = useState({ isClockedIn: false });
-  const [clockLoading, setClockLoading] = useState(true);
 
-  // Keep useEffect for initial clock status fetch
-  useEffect(() => {
-    const fetchInitialStatus = async () => {
-      setClockLoading(true);
-      try {
-        const response = await api.get('/api/employees/clock-status');
-        setClockStatus(response.data);
-        setError(null);
-      } catch (err) {
-        console.error('Failed to fetch initial clock status:', err);
-        setError('Failed to fetch clock status');
-      } finally {
-        setClockLoading(false);
+  const fetchTimesheetData = useCallback(async () => {
+    if (!employeeId) {
+        // console.log("Timesheet: Waiting for employeeId from context...");
+        setLoading(false); // Stop loading if no employeeId yet
+        return; 
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const payPeriodRes = await api.get('/api/employee-self-service/me/pay-period/current');
+      const currentPayPeriod = payPeriodRes.data;
+      setPayPeriod(currentPayPeriod);
+
+      if (currentPayPeriod && currentPayPeriod.id) {
+        const entriesRes = await api.get(`/api/employee-self-service/me/timesheet-entries?payPeriodId=${currentPayPeriod.id}`);
+        setTimesheetEntries(entriesRes.data.entries || []);
+        if (onDataLoad) onDataLoad();
+      } else {
+        setTimesheetEntries([]);
       }
-    };
-    fetchInitialStatus();
-  }, []);
-
-  // Keep Clock In/Out Handlers
-  const handleClockIn = async () => {
-    setError(null);
-    try {
-      const clockInResponse = await api.post('/api/employees/clock-in');
-      const response = await api.get('/api/employees/clock-status');
-      setClockStatus(response.data);
-
-      // --- Update Event Data for Today ---
-      const today = new Date();
-      const todayDayName = daysOfWeek[today.getDay()];
-      const clockInTime = response.data?.lastEvent?.timestamp 
-                          ? new Date(response.data.lastEvent.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-                          : today.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-
-      setDailyEvents(prevData => {
-        const currentDayEvents = prevData[todayDayName] || [];
-        return {
-          ...prevData,
-          [todayDayName]: [
-            ...currentDayEvents,
-            { type: 'IN', time: clockInTime }
-          ]
-        };
-      });
-      // --- End Update Event Data ---
-
     } catch (err) {
-      console.error('Clock In Error:', err.response?.data?.message || err.message);
-      setError(`Failed to clock in: ${err.response?.data?.message || err.message}`);
+      console.error('Failed to fetch timesheet data:', err);
+      setError(`Failed to load timesheet: ${err.response?.data?.message || err.message}`);
+      setTimesheetEntries([]); 
+      setPayPeriod(null);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [employeeId, onDataLoad]);
 
-  const handleClockOut = async () => {
-    setError(null);
-    try {
-      const clockOutResponse = await api.post('/api/employees/clock-out');
-      const response = await api.get('/api/employees/clock-status');
-      setClockStatus(response.data);
-
-      // --- Update Event Data for Today ---
-      const today = new Date();
-      const todayDayName = daysOfWeek[today.getDay()];
-      const clockOutTime = response.data?.lastEvent?.timestamp 
-                           ? new Date(response.data.lastEvent.timestamp).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false })
-                           : today.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-      
-      setDailyEvents(prevData => {
-        const currentDayEvents = prevData[todayDayName] || [];
-        // Simple add - no pairing or hour calculation here
-        return {
-          ...prevData,
-          [todayDayName]: [
-            ...currentDayEvents,
-            { type: 'OUT', time: clockOutTime }
-          ]
-        };
-      });
-      // NOTE: Daily/Weekly hour/pay totals are NOT recalculated here from mock events.
-      // --- End Update Event Data ---
-
-    } catch (err) {
-      console.error('Clock Out Error:', err.response?.data?.message || err.message);
-      setError(`Failed to clock out: ${err.response?.data?.message || err.message}`);
+  useEffect(() => {
+    if (employeeId) { // Only fetch if employeeId is available
+        fetchTimesheetData();
     }
-  };
+  }, [fetchTimesheetData, needsRefresh, employeeId]);
 
-  // Keep Placeholder Handler for Timesheet Submission
+  useEffect(() => {
+    if (timesheetEntries && timesheetEntries.length > 0 && typeof hourlyRate !== 'undefined') {
+      const totalGross = timesheetEntries.reduce((acc, entry) => {
+        return acc + (parseFloat(entry.hoursWorked) * parseFloat(hourlyRate));
+      }, 0);
+      setWeeklyGross(totalGross.toFixed(2));
+    } else {
+      setWeeklyGross(0);
+    }
+  }, [timesheetEntries, hourlyRate]);
+
   const handleSubmitTimesheet = async () => {
+    if (!payPeriod || !payPeriod.id) {
+      setError('Cannot submit: Pay period information is missing.');
+      return;
+    }
+    // Backend uses 'active', frontend might have used 'Open' from mock
+    if (payPeriod.status !== 'active') { 
+        setError('Timesheet cannot be submitted as the pay period is not active.');
+        return;
+    }
+
+    setLoading(true);
     setError(null);
-    console.log("Attempting to submit timesheet...");
-    // alert('Submit functionality not yet implemented on the backend.'); // Remove placeholder alert
-
-    // --- Actual API Call --- 
     try {
-      // We might need to pass identifying info, like pay period start/end or a specific ID
-      // For now, the backend placeholder assumes current/latest for employee 1
-      const response = await api.post('/api/employees/timesheet/submit'); 
-
-      console.log('Timesheet submitted successfully:', response.data);
-      
-      // Update UI: Change pay period status locally and disable button
-      setPayPeriod(prev => ({ ...prev, status: 'Submitted' }));
-      alert('Timesheet submitted successfully!'); // Simple feedback
-
+      await api.post('/api/employee-self-service/me/timesheet/submit', { payPeriodId: payPeriod.id });
+      alert('Timesheet submitted successfully!');
+      fetchTimesheetData(); 
     } catch (err) {
       console.error('Submit Timesheet Error:', err.response?.data?.message || err.message);
       setError(`Failed to submit timesheet: ${err.response?.data?.message || err.message}`);
+    } finally {
+        setLoading(false); // Ensure loading is set to false in all paths
     }
-    // --- End API Call --- 
   };
+  
+  // Initial loading state before employeeId is confirmed from context
+  if (typeof employeeId === 'undefined') {
+      return <div className="employee-timesheet-container">Loading user context...</div>;
+  }
+  // Loading state while fetching data (and employeeId is present)
+  if (loading && employeeId) return <div className="employee-timesheet-container">Loading timesheet data...</div>;
+  // Error display should be more prominent if it occurs after initial context load
+  if (error) return <div className="employee-timesheet-container error-message">{error}</div>;
+  // If no pay period info after loading (and no error shown yet for it)
+  if (!payPeriod && !loading) return <div className="employee-timesheet-container">Could not load pay period information.</div>;
 
-  if (clockLoading) return <div>Loading clock status...</div>;
+  const entriesMap = new Map();
+  timesheetEntries.forEach(entry => {
+    // entry.date is expected to be in 'YYYY-MM-DD' format from the backend (Sequelize DATEONLY)
+    if (entry && entry.date) { 
+      entriesMap.set(entry.date, entry);
+    }
+  });
+
+  const displayDays = [];
+  if (payPeriod && payPeriod.startDate && payPeriod.endDate) {
+    let currentDisplayDate = moment(payPeriod.startDate);
+    const endDisplayDate = moment(payPeriod.endDate);
+    while (currentDisplayDate.isSameOrBefore(endDisplayDate, 'day')) {
+        displayDays.push(currentDisplayDate.clone());
+        currentDisplayDate.add(1, 'day');
+    }
+  }
+  
+  // Determine if all relevant entries are submitted
+  const allEntriesSubmitted = timesheetEntries.length > 0 && timesheetEntries.every(e => e.status === 'submitted');
+  const isPayPeriodSubmittedOrClosed = payPeriod?.status === 'submitted' || payPeriod?.status === 'closed' || payPeriod?.status === 'paid';
 
   return (
     <div className="employee-timesheet-container">
-      {error && <div className="error-message">{error}</div>}
-
+      {error && !loading && <div className="error-message" style={{ marginBottom: '15px' }}>{error}</div>} 
       <div className="weekly-details">
         <h2>Weekly Timesheet</h2>
         <p className="pay-period-info">
-          Pay Period: {new Date(payPeriod?.startDate).toLocaleDateString()} - {new Date(payPeriod?.endDate).toLocaleDateString()} 
-          (Status: {payPeriod?.status})
+          Pay Period: {payPeriod ? new Date(payPeriod.startDate).toLocaleDateString() : 'N/A'} - {payPeriod ? new Date(payPeriod.endDate).toLocaleDateString() : 'N/A'} 
+          (Status: {payPeriod ? payPeriod.status : 'N/A'})
         </p>
 
         <div className="timesheet-details-list">
           <div className="timesheet-details-header timesheet-details-row">
             <span>Day</span>
-            <span>Clock In</span>
-            <span>Clock Out</span>
-            <span>Hours</span>
+            <span>Date</span>
+            <span>Hours Worked</span>
             <span>Daily Pay</span>
           </div>
-          {daysOfWeek.map(day => {
-            // Get the data for the current day from the state
-            const dayData = dailyEvents[day]; 
-            // Format times from the state
-            const clockInFormatted = dayData?.length > 0 ? formatTimeTo12Hour(dayData[0].time) : '-';
-            const clockOutFormatted = dayData?.length > 1 ? formatTimeTo12Hour(dayData[1].time) : '-';
+          {displayDays.map(dateMoment => {
+            const dateStr = dateMoment.format('YYYY-MM-DD');
+            const dayName = dateMoment.format('dddd');
+            const entry = entriesMap.get(dateStr);
+            
+            let displayedHoursWorked = '0.000';
+            if (entry && entry.hoursWorked != null) { // Check specifically for null or undefined
+              const numHours = parseFloat(entry.hoursWorked);
+              if (!isNaN(numHours)) {
+                displayedHoursWorked = numHours.toFixed(3);
+              }
+            }
+
+            const dailyPay = (typeof hourlyRate !== 'undefined' && entry && entry.hoursWorked) ? (parseFloat(entry.hoursWorked) * parseFloat(hourlyRate)).toFixed(2) : '0.00';
 
             return (
-              // Render the single summary row for the day
-              <div key={day} className="timesheet-details-item timesheet-details-row">
-                <span>{day}</span>
-                <span>{clockInFormatted}</span>
-                <span>{clockOutFormatted}</span>
-                {/* Display hours/pay from state (may be inaccurate for multiple events) */}
-                <span>{dayData?.length > 0 ? dayData.length / 2 : '0'}</span> 
-                <span>${dayData?.length > 0 ? (dayData.length / 2) * MOCK_HOURLY_RATE : '0.00'}</span> 
+              <div key={dateStr} className="timesheet-details-item timesheet-details-row">
+                <span>{dayName}</span>
+                <span>{dateMoment.format('M/D/YYYY')}</span>
+                <span>{displayedHoursWorked}</span> 
+                <span>${dailyPay}</span> 
               </div>
             );
           })}
           <div className="timesheet-details-footer timesheet-details-row">
             <span></span>
             <span></span>
-            <span></span>
-            <span>Weekly Gross (Simulated):</span> 
-            <span>${mockWeeklyGross}</span> 
+            <span>Weekly Gross:</span> 
+            <span>${weeklyGross}</span> 
           </div>
         </div>
 
         <button 
           onClick={handleSubmitTimesheet} 
           className="submit-timesheet-button"
-          disabled={payPeriod?.status !== 'Open'} 
+          disabled={loading || payPeriod?.status !== 'active' || allEntriesSubmitted }
         >
-          Submit Timesheet for Approval
+          {isPayPeriodSubmittedOrClosed || allEntriesSubmitted ? 'Timesheet Submitted' : 'Submit Timesheet for Approval'}
         </button>
       </div>
-
     </div>
   );
 };
