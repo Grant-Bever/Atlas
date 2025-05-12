@@ -5,23 +5,35 @@ import SignUpView from '../components/SignUpView';
 const EmployeeSignUpPage = () => {
   const navigate = useNavigate();
 
-  const handleSignUpSubmit = (formData) => {
-    // Placeholder for actual account creation logic (Employee)
-    // API call to backend to save to 'employee' table.
-    console.log('Employee Account Creation Data:', formData);
-    alert(`Employee account creation for ${formData.email} simulated. Data would be sent to backend.\nRedirecting to login page.`);
-    
-    // Database columns to consider for 'employee' table:
-    // - employee_id (Primary Key)
-    // - email (Unique, Indexed)
-    // - password_hash
-    // - phone_number (Nullable)
-    // - first_name, last_name (Likely needed for an employee)
-    // - role (e.g., 'cashier', 'cook', if applicable)
-    // - manager_id (Foreign key if managed by someone)
-    // - created_at, updated_at
+  const handleSignUpSubmit = async (formData) => {
+    try {
+      const response = await fetch('/api/auth/employee/signup', { // Updated API endpoint
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password,
+          name: `${formData.roleName} User`, // Or collect first/last name properly
+          phoneNumber: formData.phoneNumber,
+        }),
+      });
 
-    navigate('/'); // Navigate to employee login page
+      const result = await response.json();
+
+      if (!response.ok) {
+        alert(`Sign up failed: ${result.message || 'Unknown error'}`);
+        return;
+      }
+
+      alert('Employee account created successfully! Please log in.');
+      navigate('/'); // Navigate to employee login page
+
+    } catch (error) {
+      console.error('Sign up request error:', error);
+      alert('Sign up request failed. Please try again.');
+    }
   };
 
   return (

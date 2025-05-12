@@ -10,6 +10,7 @@ const employeeRoutes = require('./routes/employeeRoutes'); // <-- Import employe
 const inventoryRoutes = require('./routes/inventoryRoutes'); // <-- Import inventory routes
 const customerRoutes = require('./routes/customerRoutes');
 const employeeSelfServiceRoutes = require('./routes/employeeSelfServiceRoutes'); // <-- IMPORT NEW ROUTES
+const authRoutes = require('./routes/authRoutes'); // Import new auth routes
 // Add other route imports here as you create them (e.g., inventoryRoutes)
 
 const app = express();
@@ -26,6 +27,7 @@ app.use('/api/employees', employeeRoutes); // <-- Mount employee routes
 app.use('/api/inventory', inventoryRoutes); // <-- Mount inventory routes
 app.use('/api/customer', customerRoutes);
 app.use('/api/employee-self-service', employeeSelfServiceRoutes); // <-- MOUNT NEW ROUTES
+app.use('/api/auth', authRoutes); // Mount new auth routes
 // app.use('/api/inventory', inventoryRoutes); // Example for other routes
 // Add other routes here...
 
@@ -38,9 +40,9 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3002; // Use port from environment or default to 3002
 
 // Sync database (optional: use { force: true } to drop and recreate tables - USE WITH CAUTION)
-db.sequelize.sync()
+db.sequelize.sync({ force: true })
   .then(() => {
-    console.log('Database synced successfully.');
+    console.log('Database forcibly synced (tables dropped and recreated).');
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });

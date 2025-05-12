@@ -1,4 +1,5 @@
 const { Model } = require('sequelize');
+const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
 
 module.exports = (sequelize, DataTypes) => {
   class Employee extends Model {
@@ -12,6 +13,11 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'employee_id',
         as: 'weeklyStatuses'
       });
+    }
+
+    // Instance method to validate password
+    async validatePassword(password) {
+      return bcrypt.compare(password, this.password_hash);
     }
   }
   Employee.init({
@@ -29,38 +35,52 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true
       }
     },
-    phone: {
-      type: DataTypes.STRING(20)
+    encrypted_phone_number: { // Renamed
+      type: DataTypes.STRING(255),
+      allowNull: true
     },
-    name: {
+    name: { // Assuming 'name' is sufficient; could be split into first_name, last_name
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    password: {
+    password_hash: { // Renamed
       type: DataTypes.STRING(255),
-      allowNull: false
-      // Consider adding hooks for password hashing (bcrypt) before saving
+      allowNull: false // Reverted to NOT NULL
     },
     hourly_rate: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: true // Or false depending on requirements, can be set during onboarding
+      allowNull: true
     },
-    is_active: { // New field
+    is_active: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
       defaultValue: true,
       field: 'is_active'
     },
-    fired_at: { // New field
+    fired_at: {
       type: DataTypes.DATE,
-      allowNull: true, // Null when active
+      allowNull: true,
       field: 'fired_at'
     }
   }, {
     sequelize,
     modelName: 'Employee',
     tableName: 'employees',
-    timestamps: false // Assuming no created_at/updated_at needed for employee itself
+    timestamps: true, // Enabled timestamps
+    hooks: {
+      beforeCreate: async (employee) => {
+        if (employee.password_hash) {
+          const salt = await bcrypt.genSalt(10);
+          employee.password_hash = await bcrypt.hash(employee.password_hash, salt);
+        }
+      },
+      beforeUpdate: async (employee) => {
+        if (employee.changed('password_hash') && employee.password_hash) {
+          const salt = await bcrypt.genSalt(10);
+          employee.password_hash = await bcrypt.hash(employee.password_hash, salt);
+        }
+      }
+    }
   });
   return Employee;
 }; 

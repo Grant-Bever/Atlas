@@ -1,4 +1,5 @@
 const { Model } = require('sequelize');
+const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
 
 module.exports = (sequelize, DataTypes) => {
   class Manager extends Model {
@@ -11,6 +12,11 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       Manager.hasMany(models.Timesheet, { foreignKey: 'manager_id', as: 'timesheets' });
       Manager.hasMany(models.Inventory, { foreignKey: 'manager_id', as: 'inventoryItems' });
+    }
+
+    // Instance method to validate password
+    async validatePassword(password) {
+      return bcrypt.compare(password, this.password_hash);
     }
   }
   Manager.init({
@@ -32,19 +38,33 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true
       }
     },
-    phone: {
-      type: DataTypes.STRING(20)
+    encrypted_phone_number: { // Renamed for clarity
+      type: DataTypes.STRING(255), // Store as string, actual encryption handled in service/controller
+      allowNull: true
     },
-    password: {
+    password_hash: { // Renamed from password
       type: DataTypes.STRING(255),
-      allowNull: false
-      // Consider adding hooks for password hashing (bcrypt) before saving
+      allowNull: false // Reverted to NOT NULL
     }
   }, {
     sequelize,
     modelName: 'Manager',
     tableName: 'managers', // Explicitly set table name to lowercase plural
-    timestamps: false // Assuming you don't have createdAt/updatedAt columns in schema
+    timestamps: true, // Enabled timestamps
+    hooks: {
+      beforeCreate: async (manager) => {
+        if (manager.password_hash) { // Check if password is provided (it should be)
+          const salt = await bcrypt.genSalt(10);
+          manager.password_hash = await bcrypt.hash(manager.password_hash, salt);
+        }
+      },
+      beforeUpdate: async (manager) => {
+        if (manager.changed('password_hash') && manager.password_hash) {
+          const salt = await bcrypt.genSalt(10);
+          manager.password_hash = await bcrypt.hash(manager.password_hash, salt);
+        }
+      }
+    }
   });
   return Manager;
 }; 
