@@ -40,9 +40,9 @@ app.get('/', (req, res) => {
 const PORT = process.env.PORT || 3002; // Use port from environment or default to 3002
 
 // Sync database (optional: use { force: true } to drop and recreate tables - USE WITH CAUTION)
-db.sequelize.sync({ force: true })
+db.sequelize.sync({ force: false })
   .then(() => {
-    console.log('Database forcibly synced (tables dropped and recreated).');
+    console.log('Database synced.');
     app.listen(PORT, () => {
       console.log(`Server listening on port ${PORT}`);
     });
