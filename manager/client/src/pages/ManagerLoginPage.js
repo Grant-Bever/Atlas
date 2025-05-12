@@ -1,26 +1,47 @@
 import React from 'react';
-import LoginView from '../components/LoginView';
 import { useNavigate } from 'react-router-dom';
+import LoginView from '../components/LoginView';
 
 const ManagerLoginPage = () => {
   const navigate = useNavigate();
 
-  const handleSignIn = () => {
-    // Placeholder for sign-in logic
-    // Later, integrate Firebase and redirect to manager dashboard
-    console.log('Manager Sign In Clicked');
-    alert('Manager Sign In - To be implemented');
+  const handleLoginSubmit = async (email, password) => {
+    try {
+      const response = await fetch('http://localhost:3002/api/auth/manager/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.message || 'Login failed. Please check your credentials.');
+        return false;
+      }
+
+      console.log('Manager Login successful:', data);
+      navigate('/orders'); // Navigate to Manager Active Orders page
+      return true;
+
+    } catch (error) {
+      console.error('Login request error:', error);
+      alert('An error occurred during login. Please try again.');
+      return false;
+    }
   };
 
-  const handleSignUp = () => {
-    navigate('/signup'); // Navigate to Manager Sign Up page
+  const handleSignUpClick = () => {
+    navigate('/signup');
   };
 
   return (
-    <LoginView
-      onSignIn={handleSignIn}
-      onSignUp={handleSignUp}
+    <LoginView 
       roleName="Manager"
+      onSignInSubmit={handleLoginSubmit}
+      onSignUpClick={handleSignUpClick} 
     />
   );
 };

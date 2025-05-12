@@ -8,7 +8,7 @@ import '../styles/Modal.css'; // For modal styles
 import { FaPlus, FaSearch, FaChevronDown, FaChevronRight, FaEllipsisV, FaEdit, FaTrashAlt } from 'react-icons/fa';
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
 
 function ManagerInventory() {
     const navigate = useNavigate();

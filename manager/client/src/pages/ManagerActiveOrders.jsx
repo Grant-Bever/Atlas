@@ -6,7 +6,7 @@ import '../styles/Modal.css'; // Import Modal styles
 import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare, FaHistory, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
 
 // Base URL for the API (Consider moving this to a config file)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
 
 function ManagerActiveOrders() {
   const navigate = useNavigate();

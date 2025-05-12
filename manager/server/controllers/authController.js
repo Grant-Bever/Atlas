@@ -144,6 +144,75 @@ exports.customerSignUp = async (req, res) => {
   }
 };
 
-// TODO: Implement login controller functions for employee and customer
+// --- Login Controllers ---
+
+// Manager Login
+exports.managerLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
+    const result = await managerAuthService.loginManager(email, password);
+    if (!result.success) {
+      return res.status(401).json({ message: result.message }); // Unauthorized
+    }
+
+    // On success, send back manager data (excluding password_hash)
+    // In a real app, you would generate and send a JWT here
+    res.status(200).json({ message: 'Manager login successful', manager: result.manager });
+
+  } catch (error) {
+    console.error('Manager login error:', error);
+    res.status(500).json({ message: 'Error logging in manager', error: error.message });
+  }
+};
+
+// Employee Login
+exports.employeeLogin = async (req, res) => {
+  console.log(`Employee login request received for email: ${req.body.email}`);
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      console.log('Employee login failed: Email or password missing.');
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
+    const result = await employeeAuthService.loginEmployee(email, password);
+    if (!result.success) {
+      console.log(`Employee login auth service failed for ${email}: ${result.message}`);
+      return res.status(401).json({ message: result.message }); // Unauthorized
+    }
+    
+    console.log(`Employee login successful for ${email}, sending response.`);
+    res.status(200).json({ message: 'Employee login successful', employee: result.employee });
+
+  } catch (error) {
+    console.error('Employee login error:', error);
+    res.status(500).json({ message: 'Error logging in employee', error: error.message });
+  }
+};
+
+// Customer Login
+exports.customerLogin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required.' });
+    }
+
+    const result = await customerAuthService.loginCustomer(email, password);
+    if (!result.success) {
+      return res.status(401).json({ message: result.message }); // Unauthorized
+    }
+
+    res.status(200).json({ message: 'Customer login successful', customer: result.customer });
+
+  } catch (error) {
+    console.error('Customer login error:', error);
+    res.status(500).json({ message: 'Error logging in customer', error: error.message });
+  }
+};
 
 // TODO: Implement managerLogin controller function 

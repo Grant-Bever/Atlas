@@ -75,7 +75,7 @@ const getWeeklyTimesheets = async () => {
     try {
         // Get all employees first
         const employees = await Employee.findAll({
-            attributes: ['id', 'name', 'hourly_rate', 'email', 'phone']
+            attributes: ['id', 'name', 'hourly_rate', 'email', 'encrypted_phone_number']
         });
 
         // Get all timesheet records for the week (not just submitted ones)

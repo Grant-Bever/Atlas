@@ -8,7 +8,7 @@ import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaEllipsisV, FaCheckCir
 import { formatTimeTo12Hour } from '../utils/formatTime'; // Import the utility function
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
 
 // --- Sample Data ---
 // In a real app, employee details and hours would come from the backend.
