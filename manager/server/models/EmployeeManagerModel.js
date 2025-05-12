@@ -49,7 +49,8 @@ module.exports = (sequelize, DataTypes) => {
     },
     hourly_rate: {
       type: DataTypes.DECIMAL(10, 2),
-      allowNull: true
+      allowNull: true,
+      defaultValue: 15.00 // Added default value
     },
     is_active: {
       type: DataTypes.BOOLEAN,
