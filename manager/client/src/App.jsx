@@ -15,6 +15,8 @@ import ManagerNewInvoice from './pages/ManagerNewInvoice'; // Import the new pag
 import AddEmployee from './pages/ManagerAddEmployee'; // Import AddEmployee
 import AddInventoryItem from './pages/AddInventoryItem'; // Import AddInventoryItem
 import ManagerCompletedOrders from './pages/ManagerCompletedOrders'; // Import Completed Orders
+import ManagerLoginPage from './pages/ManagerLoginPage'; // Import ManagerLoginPage
+import ManagerSignUpPage from './pages/ManagerSignUpPage'; // Import SignUpPage
 // import ManagerCustomers from './pages/ManagerCustomers'; // Add when created
 // import ManagerSettings from './pages/ManagerSettings';   // Add when created
 
@@ -25,9 +27,11 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Manager Routes - Assuming these are the main routes for now */}
-        {/* Redirect base path "/" to "/orders" by default */}
-        <Route path="/" element={<Navigate to="/orders" replace />} />
+        {/* Set login page as the root path */}
+        <Route path="/" element={<ManagerLoginPage />} />
+        <Route path="/signup" element={<ManagerSignUpPage />} />
+        
+        {/* Manager Routes - Assuming these are protected and accessible after login */}
         <Route path="/orders" element={<ManagerActiveOrders />} />
         <Route path="/orders/new" element={<ManagerNewInvoice />} />
         <Route path="/orders/edit/:orderId" element={<ManagerNewInvoice />} />

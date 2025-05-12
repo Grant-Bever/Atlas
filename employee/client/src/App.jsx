@@ -3,13 +3,15 @@ import EmployeeLayout from './components/employee/EmployeeLayout';
 import EmployeeOrders from './components/employee/EmployeeOrders';
 import EmployeeInventory from './components/employee/EmployeeInventory';
 import Timesheet from './components/employee/Timesheet';
+import EmployeeLoginPage from './pages/EmployeeLoginPage';
+import EmployeeSignUpPage from './pages/EmployeeSignUpPage';
 
 function App() {
   return (
     <Router>
       <Routes>
-        {/* Add a default route for the root path */}
-        <Route path="/" element={<Navigate to="/employee" replace />} />
+        <Route path="/" element={<EmployeeLoginPage />} />
+        <Route path="/signup" element={<EmployeeSignUpPage />} />
         
         {/* Employee routes */}
         <Route path="/employee" element={<EmployeeLayout />}>

@@ -1,0 +1,134 @@
+.login-view-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  font-family: sans-serif; /* Basic font */
+  background-color: #232B3E; /* Dark background */
+}
+
+.login-logo-container {
+  margin-bottom: 30px;
+}
+
+.app-logo {
+  max-height: 100px; /* Adjust as needed */
+  width: auto;
+}
+
+h2 {
+  margin-bottom: 20px;
+  color: #FFFFFF; /* White text for title */
+}
+
+.login-form {
+  width: 100%;
+  max-width: 400px;
+  padding: 25px;
+  border: 1px solid #555; /* Darker border for contrast */
+  border-radius: 8px;
+  background-color: #3A475A; /* Grey form background */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #E0E0E0; /* Light grey label text */
+}
+
+.form-group input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #4A5568; /* Adjusted border for dark input */
+  border-radius: 4px;
+  box-sizing: border-box;
+  background-color: #2D3748; /* Dark input background */
+  color: #FFFFFF; /* Light text for dark input */
+  /* Input background and text color will likely need to be adjusted 
+     if they inherit poorly on the new form background. 
+     For now, leaving them as they might be styled by browser defaults 
+     or global styles for inputs. */
+}
+
+.signin-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #007bff; /* Example primary color */
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+  margin-bottom: 15px;
+}
+
+.signin-button:hover {
+  background-color: #0056b3;
+}
+
+.signup-prompt {
+  text-align: center;
+  font-size: 14px;
+  color: #B0B0B0; /* Lighter prompt text */
+}
+
+.signup-button {
+  background: none;
+  border: none;
+  color: #007bff; /* Blue link color, should still be okay */
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 0;
+  font-size: 14px;
+}
+
+.signup-button:hover {
+  color: #0056b3;
+}
+
+.social-login-options {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.social-login-text {
+  font-size: 14px;
+  color: #B0B0B0; /* Same as signup prompt */
+  margin-bottom: 10px;
+}
+
+.social-signin-button {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #555; /* Consistent with form border */
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 15px;
+  margin-bottom: 10px;
+  background-color: #4A5568; /* A slightly different shade from form for distinction */
+  color: #E0E0E0; /* Light text */
+}
+
+.social-signin-button:hover {
+  background-color: #5A6B82;
+}
+
+/* Optional: Specific styling for Google/Outlook if needed later, e.g., icons or brand colors */
+.google-button {
+  /* background-color: #DB4437; /* Example Google Red */
+  /* color: white; */
+}
+
+.outlook-button {
+  /* background-color: #0078D4; /* Example Outlook Blue */
+  /* color: white; */
+} 
