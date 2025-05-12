@@ -55,15 +55,6 @@ const LoginView = ({ onSignInSubmit, onSignUpClick, roleName }) => {
           </button>
         </p>
 
-        <div className="social-login-options">
-          <p className="social-login-text">Or sign in with:</p>
-          <button type="button" className="social-signin-button google-button" onClick={() => console.log('Google Sign In Clicked')}>
-            Sign In with Google
-          </button>
-          <button type="button" className="social-signin-button outlook-button" onClick={() => console.log('Outlook Sign In Clicked')}>
-            Sign In with Outlook
-          </button>
-        </div>
       </form>
     </div>
   );

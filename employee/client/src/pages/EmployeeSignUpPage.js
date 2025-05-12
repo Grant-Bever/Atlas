@@ -15,7 +15,7 @@ const EmployeeSignUpPage = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          name: `${formData.roleName} User`, // Or collect first/last name properly
+          name: `${formData.name}`, 
           phoneNumber: formData.phoneNumber,
         }),
       });

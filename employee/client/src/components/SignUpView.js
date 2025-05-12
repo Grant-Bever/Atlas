@@ -3,6 +3,8 @@ import './SignUpView.css';
 // We assume logo is handled by public/assets path now, so no direct import needed for logo file here unless specific structure
 
 const SignUpView = ({ roleName, onSubmit }) => {
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -15,7 +17,13 @@ const SignUpView = ({ roleName, onSubmit }) => {
     e.preventDefault();
     setError(''); // Clear previous errors
 
-    // Email and basic presence validation (already exists)
+    // Name validation
+    if (!firstName || !lastName) {
+      setError('First name and Last name are required.');
+      return;
+    }
+
+    // Email and basic presence validation
     if (!email || !password) {
       setError('Email and Password are required.');
       return;
@@ -25,13 +33,13 @@ const SignUpView = ({ roleName, onSubmit }) => {
         return;
     }
 
-    // Password confirmation (already exists)
+    // Password confirmation
     if (password !== confirmPassword) {
       setError('Passwords do not match.');
       return;
     }
 
-    // New Password Strength Validation
+    // Password Strength Validation
     if (password.length < 8) {
       setError('Password must be at least 8 characters long.');
       return;
@@ -45,14 +53,23 @@ const SignUpView = ({ roleName, onSubmit }) => {
       return;
     }
 
-    // New Phone Number Validation (if provided)
+    // Phone Number Validation (if provided)
     if (phoneNumber && !/^\d{10}$/.test(phoneNumber)) {
       setError('Phone number must be exactly 10 digits.');
       return;
     }
 
+    // Concatenate first and last name
+    const fullName = `${firstName} ${lastName}`.trim();
+
     // If all validations pass
-    onSubmit({ email, password, phoneNumber, roleName });
+    onSubmit({ 
+      email, 
+      password, 
+      phoneNumber, 
+      roleName,
+      name: fullName // Send the concatenated name
+    });
   };
 
   return (
@@ -63,6 +80,28 @@ const SignUpView = ({ roleName, onSubmit }) => {
       <h2>Create {roleName} Account</h2>
       <form className="signup-form" onSubmit={handleSubmit}>
         {error && <p className="error-message">{error}</p>}
+        <div className="form-group">
+          <label htmlFor="firstName">First Name*</label>
+          <input 
+            type="text" 
+            id="firstName" 
+            name="firstName" 
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            required 
+          />
+        </div>
+        <div className="form-group">
+          <label htmlFor="lastName">Last Name*</label>
+          <input 
+            type="text" 
+            id="lastName" 
+            name="lastName" 
+            value={lastName}
+            onChange={(e) => setLastName(e.target.value)}
+            required 
+          />
+        </div>
         <div className="form-group">
           <label htmlFor="email">Email*</label>
           <input 
