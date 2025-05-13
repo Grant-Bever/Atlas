@@ -155,12 +155,18 @@ steps:
   args:
     - '-c'
     - |
-      cd /workspace && \
-      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt && \
-      export DB_PASS=$(cat /tmp/db_password.txt) && \
-      cd manager/server && \
+      # Install Node.js and npm
+      apt-get update -y && apt-get install -y nodejs npm && \\
+      # Verify installation
+      node -v && npm -v && npx -v && \\
+      # Continue with existing script
+      cd /workspace && \\
+      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt && \\
+      export DB_PASS=$(cat /tmp/db_password.txt) && \\
+      cd manager/server && \\
+      npm install sequelize-cli && \\ # Ensure sequelize-cli is available
       npx sequelize-cli db:migrate --env production
-  waitFor: ['-'] # Run after all image builds if not explicitly waiting for a specific image
+  waitFor: ['Build Manager Server'] # Ensure this runs after the server image is built, but before deployment.
 
 images:
 - '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA'
