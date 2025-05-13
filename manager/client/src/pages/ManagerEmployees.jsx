@@ -325,4 +325,55 @@ function ManagerEmployees() {
                          {/* NEW: Timesheet Approval Actions */}
                          <div className="timesheet-approval-actions">
                              <button
-                                title={isApprovedOrDenied ? `
+                                title={isApprovedOrDenied ? `Timesheet already ${employee.approvalStatus.toLowerCase()}` : (isFired ? 'Cannot approve fired employee timesheet' : 'Approve Timesheet')}
+                                className="button button-success button-small"
+                                onClick={(e) => handleApproveClick(e, employee.employeeId, employee.name)}
+                                disabled={employee.approvalStatus !== 'Pending'}
+                             >
+                                <FaCheckCircle /> Approve
+                             </button>
+                             <button
+                                title={isApprovedOrDenied ? `Timesheet already ${employee.approvalStatus.toLowerCase()}` : (isFired ? 'Cannot deny fired employee timesheet' : 'Deny Timesheet')}
+                                className="button button-warning button-small"
+                                onClick={(e) => handleDenyClick(e, employee.employeeId, employee.name)}
+                                disabled={employee.approvalStatus !== 'Pending'}
+                             >
+                                <FaTimesCircle /> Deny
+                             </button>
+                         </div>
+
+                        {/* Employee Action Menu */}
+                        <div className="employee-action-menu-container action-menu-container">
+                            <button
+                                onClick={(e) => handleEmployeeMenuToggle(e, employee.employeeId)}
+                                className="icon-button menu-dots-button">
+                                <FaEllipsisV />
+                            </button>
+                            {isMenuOpen && (
+                                <div className="action-menu">
+                                    {employee.isActive ? (
+                                        <button onClick={(e) => handleFireClick(e, employee.employeeId, employee.name)} className="danger">
+                                            <FaTrashAlt /> Fire Employee
+                                        </button>
+                                    ) : (
+                                        <button onClick={(e) => handleUndoFireClick(e, employee.employeeId, employee.name)} className="secondary">
+                                            <FaUndo /> Undo Fire
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="no-employees-message">No employees found.</div>
+        )}
+      </div>
+    </ManagerLayout>
+  );
+}
+
+export default ManagerEmployees;
