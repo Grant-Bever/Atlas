@@ -1,19 +1,25 @@
 const { Sequelize } = require('sequelize');
 
-// Environment variables will be injected by Cloud Run/Cloud Build
+// Environment variables will be loaded from .env or injected by Cloud Run/Cloud Build
 const dbName = process.env.DB_NAME;
 const dbUser = process.env.DB_USER;
-const dbPassword = process.env.DB_PASS; // Provided by Secret Manager via Cloud Run
-const dbHostSocketPath = process.env.DB_HOST; // Provided by Cloud Run (e.g., /cloudsql/project:region:instance)
+const dbPassword = process.env.DB_PASSWORD || process.env.DB_PASS; // Support both formats
+const dbHostSocketPath = process.env.DB_HOST; // Could be a socket path for Cloud SQL or a hostname
+const dbPort = process.env.DB_PORT || 5432; // Default PostgreSQL port
 
+const isProduction = process.env.NODE_ENV === 'production';
+const isCloudSql = dbHostSocketPath && dbHostSocketPath.includes('/cloudsql/');
+
+console.log(`Environment: ${isProduction ? 'Production' : 'Development'}`);
 console.log(`DB_NAME: ${dbName}`);
 console.log(`DB_USER: ${dbUser}`);
-console.log(`DB_PASS is set: ${!!dbPassword}`); // Log if password is set, not the value
-console.log(`DB_HOST (socket path): ${dbHostSocketPath}`);
+console.log(`DB_PASS/PASSWORD is set: ${!!dbPassword}`); // Log if password is set, not the value
+console.log(`DB_HOST: ${dbHostSocketPath}`);
+console.log(`DB_PORT: ${dbPort}`);
+console.log(`Using Cloud SQL socket: ${isCloudSql}`);
 
 if (!dbName || !dbUser || !dbPassword || !dbHostSocketPath) {
-  console.error('CRITICAL: Database configuration environment variables (DB_NAME, DB_USER, DB_PASS, DB_HOST) must all be set.');
-  process.exit(1);
+  console.error('WARNING: Some database configuration environment variables are missing. Database connection may fail.');
 }
 
 const sequelizeOptions = {
@@ -27,16 +33,19 @@ const sequelizeOptions = {
   }
 };
 
-// Set the host directly to the socket path directory for pg driver
-if (dbHostSocketPath) {
+// Configure connection based on environment
+if (isCloudSql) {
+  // Cloud SQL with socket
   sequelizeOptions.host = dbHostSocketPath;
-  console.log(`Sequelize configured to use socket via host: ${dbHostSocketPath}`);
+  console.log(`Sequelize configured to use Cloud SQL socket: ${dbHostSocketPath}`);
 } else {
-  // This case should ideally not happen due to the check above, but as a fallback:
-  console.error('CRITICAL: DB_HOST (socket path) is not defined. Sequelize will likely fail to connect or use defaults.');
-  // Do NOT set host/port here to avoid defaulting to localhost if socket is intended
+  // Regular TCP connection (local development or other)
+  sequelizeOptions.host = dbHostSocketPath; // Usually 'localhost' in dev
+  sequelizeOptions.port = dbPort;
+  console.log(`Sequelize configured to use TCP connection: ${dbHostSocketPath}:${dbPort}`);
 }
 
+// Create Sequelize instance
 const sequelize = new Sequelize(dbName, dbUser, dbPassword, sequelizeOptions);
 
 // Test the connection (optional - can be called during app startup if needed)
@@ -44,11 +53,13 @@ async function testConnection() {
   try {
     await sequelize.authenticate();
     console.log('Database connection has been established successfully.');
+    return true;
   } catch (error) {
     console.error('Unable to connect to the database:', error);
+    return false;
   }
 }
 
-// testConnection(); // Don't call directly here, let the application manage startup checks
-
-module.exports = sequelize; 
+// Export both the sequelize instance and the test function
+module.exports = sequelize;
+module.exports.testConnection = testConnection; 

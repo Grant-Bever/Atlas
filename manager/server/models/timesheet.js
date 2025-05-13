@@ -61,6 +61,11 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       }
     }
+  }, {
+    tableName: 'Timesheets',
+    timestamps: true,
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
   });
 
   Timesheet.associate = (models) => {
