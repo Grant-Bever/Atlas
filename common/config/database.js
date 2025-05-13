@@ -1,20 +1,24 @@
 const { Sequelize } = require('sequelize');
-const path = require('path'); // Import path module
 
-// Load environment variables from the specific .env file location
-require('dotenv').config({ path: path.resolve(__dirname, '../../manager/server/.env') });
+// Environment variables will be injected by Cloud Run/Cloud Build
+const dbName = process.env.DB_NAME;
+const dbUser = process.env.DB_USER;
+const dbPassword = process.env.DB_PASS; // Provided by Secret Manager via Cloud Run
+const dbHostSocketPath = process.env.DB_HOST; // Provided by Cloud Run (e.g., /cloudsql/project:region:instance)
 
-// It's best practice to use environment variables for sensitive data
-const dbName = process.env.DB_NAME || 'AtlasDB'; // Use your database name
-const dbUser = process.env.DB_USER || 'postgres'; // Use your PostgreSQL username
-const dbPassword = process.env.DB_PASSWORD || 'your_password'; // Use your PostgreSQL password
-const dbHost = process.env.DB_HOST || 'localhost';
-const dbPort = process.env.DB_PORT || 5432;
+if (!dbName || !dbUser || !dbPassword || !dbHostSocketPath) {
+  console.error('Database configuration environment variables (DB_NAME, DB_USER, DB_PASS, DB_HOST) must be set.');
+  process.exit(1);
+}
 
 const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
-  host: dbHost,
-  port: dbPort,
+  // host: dbHost, // Host is specified via socket path for Cloud SQL Proxy
+  // port: dbPort, // Port is not needed for socket path
   dialect: 'postgres',
+  dialectOptions: {
+    // Use a Unix socket for Cloud SQL Auth Proxy connection
+    socketPath: dbHostSocketPath
+  },
   logging: false, // Set to console.log to see SQL queries, or false to disable
   pool: {
     max: 5,
@@ -24,7 +28,7 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
   }
 });
 
-// Test the connection (optional but recommended)
+// Test the connection (optional - can be called during app startup if needed)
 async function testConnection() {
   try {
     await sequelize.authenticate();
@@ -34,6 +38,6 @@ async function testConnection() {
   }
 }
 
-testConnection();
+// testConnection(); // Don't call directly here, let the application manage startup checks
 
 module.exports = sequelize; 

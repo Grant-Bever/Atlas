@@ -1,0 +1,121 @@
+steps:
+# === MANAGER SERVER (Backend API) ===
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA', './manager/server']
+  id: 'Build Manager Server'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA']
+  id: 'Push Manager Server'
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'manager-server' # Cloud Run service name
+    - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA'
+    - '--region=$_DEPLOY_REGION'
+    - '--platform=managed'
+    - '--quiet'
+    - '--allow-unauthenticated' # Or configure IAM for authentication
+    - '--set-cloudsql-instances=$_DB_INSTANCE_CONNECTION_NAME' # Add your DB instance connection name
+    # Set environment variables, excluding DB_PASS (it will come from Secret Manager)
+    - '--update-env-vars=DB_USER=$_DB_USER,DB_NAME=$_DB_NAME,DB_HOST=/cloudsql/$_DB_INSTANCE_CONNECTION_NAME' 
+    # Mount the DB password from Secret Manager into the DB_PASS environment variable
+    - '--set-secrets=DB_PASS=db-password:latest' 
+    - '--service-account=$_SERVICE_ACCOUNT_EMAIL' # Recommended: Use a dedicated service account
+    - '--port=3002' # Port your manager-server listens on, ensure Dockerfile EXPOSEs it
+  id: 'Deploy Manager Server'
+
+# === CUSTOMER CLIENT (Frontend) ===
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA', './customer/customer']
+  id: 'Build Customer Client'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA']
+  id: 'Push Customer Client'
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'customer-client' # Cloud Run service name
+    - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA'
+    - '--region=$_DEPLOY_REGION'
+    - '--platform=managed'
+    - '--quiet'
+    - '--allow-unauthenticated'
+    - '--port=80' # Nginx default port, ensure Dockerfile EXPOSEs it
+    - '--service-account=$_SERVICE_ACCOUNT_EMAIL' # Recommended
+  id: 'Deploy Customer Client'
+
+# === MANAGER CLIENT (Frontend) ===
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-client:$COMMIT_SHA', './manager/client']
+  id: 'Build Manager Client'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-client:$COMMIT_SHA']
+  id: 'Push Manager Client'
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'manager-client' # Cloud Run service name
+    - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-client:$COMMIT_SHA'
+    - '--region=$_DEPLOY_REGION'
+    - '--platform=managed'
+    - '--quiet'
+    - '--allow-unauthenticated'
+    - '--port=80' # Nginx default port
+    - '--service-account=$_SERVICE_ACCOUNT_EMAIL' # Recommended
+  id: 'Deploy Manager Client'
+
+# === EMPLOYEE CLIENT (Frontend) ===
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA', './employee/client']
+  id: 'Build Employee Client'
+
+- name: 'gcr.io/cloud-builders/docker'
+  args: ['push', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA']
+  id: 'Push Employee Client'
+
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  entrypoint: gcloud
+  args:
+    - 'run'
+    - 'deploy'
+    - 'employee-client' # Cloud Run service name
+    - '--image=$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA'
+    - '--region=$_DEPLOY_REGION'
+    - '--platform=managed'
+    - '--quiet'
+    - '--allow-unauthenticated'
+    - '--port=80' # Nginx default port
+    - '--service-account=$_SERVICE_ACCOUNT_EMAIL' # Recommended
+  id: 'Deploy Employee Client'
+
+images:
+- '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA'
+- '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA'
+- '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-client:$COMMIT_SHA'
+- '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA'
+
+# Substitutions - Define these in your Cloud Build trigger or when running the build manually
+substitutions:
+  _AR_HOSTNAME: 'us-east1-docker.pkg.dev' # Updated based on region
+  _AR_REPO: 'atlas-repo' # Your repo name
+  _DEPLOY_REGION: 'us-east1'   # Your region
+  _DB_INSTANCE_CONNECTION_NAME: 'atlas-planner:us-east1:atlas-db' # Your Cloud SQL instance connection name
+  _DB_USER: 'postgres' # Your database user
+  # _DB_PASS: is now handled by Secret Manager in the deploy step above
+  _DB_NAME: 'atlas-db' # Your database name
+  _SERVICE_ACCOUNT_EMAIL: 'cloud-run-executor@atlas-planner.iam.gserviceaccount.com' # Your Cloud Run service account
+
+options:
+  logging: CLOUD_LOGGING_ONLY

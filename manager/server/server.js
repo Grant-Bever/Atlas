@@ -15,6 +15,9 @@ const authRoutes = require('./routes/authRoutes'); // Import new auth routes
 
 const app = express();
 
+// Trust the first proxy hop (common for Cloud Run/Load Balancers)
+app.set('trust proxy', 1); 
+
 // Middleware
 app.use(cors()); // Enable Cross-Origin Resource Sharing for frontend requests
 app.use(express.json()); // Parse incoming request bodies in JSON format
