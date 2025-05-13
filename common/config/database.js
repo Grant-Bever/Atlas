@@ -6,19 +6,19 @@ const dbUser = process.env.DB_USER;
 const dbPassword = process.env.DB_PASS; // Provided by Secret Manager via Cloud Run
 const dbHostSocketPath = process.env.DB_HOST; // Provided by Cloud Run (e.g., /cloudsql/project:region:instance)
 
+console.log(`DB_NAME: ${dbName}`);
+console.log(`DB_USER: ${dbUser}`);
+console.log(`DB_PASS is set: ${!!dbPassword}`); // Log if password is set, not the value
+console.log(`DB_HOST (socket path): ${dbHostSocketPath}`);
+
 if (!dbName || !dbUser || !dbPassword || !dbHostSocketPath) {
-  console.error('Database configuration environment variables (DB_NAME, DB_USER, DB_PASS, DB_HOST) must be set.');
+  console.error('CRITICAL: Database configuration environment variables (DB_NAME, DB_USER, DB_PASS, DB_HOST) must all be set.');
   process.exit(1);
 }
 
-const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
-  // host: dbHost, // Host is specified via socket path for Cloud SQL Proxy
-  // port: dbPort, // Port is not needed for socket path
+const sequelizeOptions = {
   dialect: 'postgres',
-  dialectOptions: {
-    // Use a Unix socket for Cloud SQL Auth Proxy connection
-    socketPath: dbHostSocketPath
-  },
+  dialectOptions: {},
   logging: false, // Set to console.log to see SQL queries, or false to disable
   pool: {
     max: 5,
@@ -26,7 +26,20 @@ const sequelize = new Sequelize(dbName, dbUser, dbPassword, {
     acquire: 30000,
     idle: 10000
   }
-});
+};
+
+// Only set socketPath if dbHostSocketPath is actually defined and not empty
+// This is the preferred way to connect via Cloud SQL Proxy
+if (dbHostSocketPath) {
+  sequelizeOptions.dialectOptions.socketPath = dbHostSocketPath;
+  console.log(`Sequelize configured to use socketPath: ${dbHostSocketPath}`);
+} else {
+  // This case should ideally not happen due to the check above, but as a fallback:
+  console.error('CRITICAL: DB_HOST (socket path) is not defined. Sequelize will likely fail to connect or use defaults.');
+  // Do NOT set host/port here to avoid defaulting to localhost if socket is intended
+}
+
+const sequelize = new Sequelize(dbName, dbUser, dbPassword, sequelizeOptions);
 
 // Test the connection (optional - can be called during app startup if needed)
 async function testConnection() {
