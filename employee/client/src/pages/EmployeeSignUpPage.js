@@ -1,13 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignUpView from '../components/SignUpView';
+import { API_BASE_URL } from '../utils/config';
 
 const EmployeeSignUpPage = () => {
   const navigate = useNavigate();
 
   const handleSignUpSubmit = async (formData) => {
     try {
-      const response = await fetch('/api/auth/employee/signup', { // Updated API endpoint
+      const response = await fetch(`${API_BASE_URL}/api/auth/employee/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

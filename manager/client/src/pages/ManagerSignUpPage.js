@@ -1,13 +1,14 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import SignUpView from '../components/SignUpView';
+import { API_BASE_URL } from '../utils/config';
 
 const ManagerSignUpPage = () => {
   const navigate = useNavigate();
 
   const handleSignUpSubmit = async (formData) => {
     try {
-      const response = await fetch('/api/auth/manager/signup', { // Make sure this matches your server port and path
+      const response = await fetch(`${API_BASE_URL}/api/auth/manager/signup`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
