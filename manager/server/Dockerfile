@@ -1,35 +1,40 @@
 # Stage 1: Build environment
 FROM node:18-alpine AS builder
 
+# Set working directory
 WORKDIR /app
 
-# Copy package files and install dependencies
-COPY package.json package-lock.json* ./
+# Copy package files FOR THE SERVER from the correct location
+COPY manager/server/package.json manager/server/package-lock.json* ./manager/server/
+
+# Copy common directory required by the server
+COPY common/. ./common/
+
+# Change working directory to the server directory to install its specific dependencies
+WORKDIR /app/manager/server
 RUN npm ci --omit=dev
 
-# Copy the rest of the application code within the manager/server context
-COPY . .
+# Change back to the root app directory
+WORKDIR /app
 
-# Copy the common directory from the parent directory
-COPY ../common ./common
+# Copy the rest of the server source code
+COPY manager/server/. ./manager/server/
 
 # Stage 2: Production environment
 FROM node:18-alpine AS production
 
 WORKDIR /app
 
-# Copy dependencies from builder stage
-COPY --from=builder /app/node_modules ./node_modules
+# Copy only necessary files from the builder stage
+COPY --from=builder /app/manager/server/node_modules ./manager/server/node_modules
+COPY --from=builder /app/common ./common
+COPY --from=builder /app/manager/server ./manager/server
 
-# Copy application code (including the common dir) from builder stage
-COPY --from=builder /app ./
-# Ensure common is explicitly copied if COPY . . above doesn't get it (it should, but belt-and-suspenders)
-# COPY --from=builder /app/common ./common
+# Set the final working directory
+WORKDIR /app/manager/server
 
 # Expose the port the app runs on (Cloud Run sets this via PORT env var)
-# Defaulting to 3002 if PORT is not set, based on server.js
 EXPOSE 3002
 
-# Command to run the application
-# Use the PORT environment variable provided by Cloud Run
+# Command to run the application, now relative to the server directory
 CMD ["node", "server.js"]

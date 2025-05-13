@@ -1,7 +1,7 @@
 steps:
 # === MANAGER SERVER (Backend API) ===
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA', './manager/server']
+  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA', '.', '-f', 'manager/server/Dockerfile']
   id: 'Build Manager Server'
 
 - name: 'gcr.io/cloud-builders/docker'
