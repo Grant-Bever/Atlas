@@ -4,7 +4,7 @@ const employeeController = require('../controllers/employeeController');
 const db = require('../models'); // Import the whole db object
 const { Employee, ClockEvent, TimesheetEntry, WeeklyTimesheetStatus } = db; // Destructure models from db
 const { Op } = require('sequelize');
-const { authenticateEmployee, isManager } = require('../middleware/auth');
+const { authenticateManager, authenticateEmployee } = require('../middleware/auth');
 
 // Helper function to check if two date objects are the same calendar day
 const isSameDay = (date1, date2) => {
@@ -48,32 +48,32 @@ const router = express.Router();
 // --- Timesheet Routes --- 
 
 // GET /api/employees/timesheets/weekly - Fetch processed weekly timesheets for relevant employees (manager view)
-// Protected by authenticateEmployee to get req.employee, and isManager to ensure it's a manager.
-router.get('/timesheets/weekly', authenticateEmployee, isManager, employeeController.getWeeklyTimesheets);
+// This route should only use authenticateManager.
+router.get('/timesheets/weekly', authenticateManager, employeeController.getWeeklyTimesheets);
 
 // PATCH /api/employees/:employeeId/timesheets/weekly/approve - Approve a specific employee's timesheet for the current week
 // Should also be protected if only managers can approve.
-router.patch('/:employeeId/timesheets/weekly/approve', authenticateEmployee, isManager, employeeController.approveWeeklyTimesheet);
+router.patch('/:employeeId/timesheets/weekly/approve', authenticateManager, employeeController.approveWeeklyTimesheet);
 
 // PATCH /api/employees/:employeeId/timesheets/weekly/deny - Deny a specific employee's timesheet for the current week
 // Should also be protected if only managers can deny.
-router.patch('/:employeeId/timesheets/weekly/deny', authenticateEmployee, isManager, employeeController.denyWeeklyTimesheet);
+router.patch('/:employeeId/timesheets/weekly/deny', authenticateManager, employeeController.denyWeeklyTimesheet);
 
 // --- Employee Status Routes ---
 
 // PATCH /api/employees/:employeeId/fire - Mark an employee as inactive
 // Should also be protected if only managers can fire.
-router.patch('/:employeeId/fire', authenticateEmployee, isManager, employeeController.fireEmployee);
+router.patch('/:employeeId/fire', authenticateManager, employeeController.fireEmployee);
 
 // PATCH /api/employees/:employeeId/reinstate - Mark an employee as active
 // Should also be protected if only managers can reinstate.
-router.patch('/:employeeId/reinstate', authenticateEmployee, isManager, employeeController.reinstateEmployee);
+router.patch('/:employeeId/reinstate', authenticateManager, employeeController.reinstateEmployee);
 
 // --- Add other employee-related routes here (e.g., CRUD for employees) ---
 
 // POST /api/employees - Add a new employee
 // Should also be protected if only managers can add employees.
-router.post('/', authenticateEmployee, isManager, employeeController.addEmployee);
+router.post('/', authenticateManager, employeeController.addEmployee);
 
 // GET /api/employees/:employeeId - Get specific employee details
 // PUT /api/employees/:employeeId - Update employee details
