@@ -18,7 +18,6 @@ if (!dbName || !dbUser || !dbPassword || !dbHostSocketPath) {
 
 const sequelizeOptions = {
   dialect: 'postgres',
-  dialectOptions: {},
   logging: false, // Set to console.log to see SQL queries, or false to disable
   pool: {
     max: 5,
@@ -28,11 +27,10 @@ const sequelizeOptions = {
   }
 };
 
-// Only set socketPath if dbHostSocketPath is actually defined and not empty
-// This is the preferred way to connect via Cloud SQL Proxy
+// Set the host directly to the socket path directory for pg driver
 if (dbHostSocketPath) {
-  sequelizeOptions.dialectOptions.socketPath = dbHostSocketPath;
-  console.log(`Sequelize configured to use socketPath: ${dbHostSocketPath}`);
+  sequelizeOptions.host = dbHostSocketPath;
+  console.log(`Sequelize configured to use socket via host: ${dbHostSocketPath}`);
 } else {
   // This case should ideally not happen due to the check above, but as a fallback:
   console.error('CRITICAL: DB_HOST (socket path) is not defined. Sequelize will likely fail to connect or use defaults.');
