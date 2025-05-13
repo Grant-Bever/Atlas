@@ -66,20 +66,18 @@ steps:
     # Only run migrations if connection test passes (the above should exit on failure due to set -e)
     echo "Running migrations with direct config..."
     # Create a temporary sequelize config JavaScript file that properly uses environment variables
-    cat > /tmp/sequelize-config.js << 'EOF'
-    module.exports = {
-      production: {
-        username: process.env.DB_USER,
-        password: process.env.DB_PASS,
-        database: process.env.DB_NAME,
-        host: process.env.DB_HOST,
-        dialect: 'postgres',
-        dialectOptions: {
-          ssl: false
-        }
-      }
-    };
-EOF
+    echo "module.exports = {" > /tmp/sequelize-config.js
+    echo "  production: {" >> /tmp/sequelize-config.js
+    echo "    username: process.env.DB_USER," >> /tmp/sequelize-config.js
+    echo "    password: process.env.DB_PASS," >> /tmp/sequelize-config.js
+    echo "    database: process.env.DB_NAME," >> /tmp/sequelize-config.js
+    echo "    host: process.env.DB_HOST," >> /tmp/sequelize-config.js
+    echo "    dialect: 'postgres'," >> /tmp/sequelize-config.js
+    echo "    dialectOptions: {" >> /tmp/sequelize-config.js
+    echo "      ssl: false" >> /tmp/sequelize-config.js
+    echo "    }" >> /tmp/sequelize-config.js
+    echo "  }" >> /tmp/sequelize-config.js
+    echo "};" >> /tmp/sequelize-config.js
     # Run migrations using the temporary config file
     DB_USER="postgres" DB_NAME="atlas-db" DB_HOST="/cloudsql/$_DB_INSTANCE_CONNECTION_NAME" DB_PASS="$(cat /tmp/db_password.txt)" npx sequelize-cli db:migrate --config /tmp/sequelize-config.js --env production
     echo "Migrations complete."
