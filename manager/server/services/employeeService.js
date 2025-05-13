@@ -78,6 +78,8 @@ const getWeeklyTimesheets = async () => {
             attributes: ['id', 'name', 'hourly_rate', 'email', 'encrypted_phone_number']
         });
 
+        console.log(`DEBUG: Found ${employees.length} employees`);
+
         // Get all timesheet records for the week (not just submitted ones)
         const timesheetRecords = await Timesheet.findAll({
             where: {
@@ -87,6 +89,8 @@ const getWeeklyTimesheets = async () => {
             }
         });
 
+        console.log(`DEBUG: Found ${timesheetRecords.length} timesheet records for the week`);
+
         // Get weekly status records
         const weeklyStatuses = await WeeklyTimesheetStatus.findAll({
             where: {
@@ -94,13 +98,9 @@ const getWeeklyTimesheets = async () => {
             }
         });
 
-        console.log('DEBUG: Data fetched:', {
-            employeeCount: employees.length,
-            timesheetCount: timesheetRecords.length,
-            weekStartDate: weekStartDateOnly,
-            timesheets: JSON.stringify(timesheetRecords, null, 2)
-        });
+        console.log(`DEBUG: Found ${weeklyStatuses.length} weekly status records`);
 
+        // Use fixed days of week array - aligned with moment.js day() function (0=Sunday, 6=Saturday)
         const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
         
         const results = employees.map(employee => {
@@ -116,60 +116,93 @@ const getWeeklyTimesheets = async () => {
                 };
             });
 
-            // Find this employee's timesheet records
-            const employeeRecords = timesheetRecords.filter(record => 
-                record.employeeId === employeeData.id
-            );
+            try {
+                // Find this employee's timesheet records
+                const employeeRecords = timesheetRecords.filter(record => 
+                    record.employeeId === employeeData.id
+                );
 
-            // Find weekly status for this employee
-            const weeklyStatus = weeklyStatuses.find(status => 
-                status.employeeId === employeeData.id
-            );
+                // Find weekly status for this employee
+                const weeklyStatus = weeklyStatuses.find(status => 
+                    status.employeeId === employeeData.id
+                );
 
-            // Process each record
-            employeeRecords.forEach(record => {
-                const recordDate = moment(record.date);
-                const dayName = daysOfWeek[recordDate.day()];
-                const hours = parseFloat(record.hoursWorked) || 0;
-                const hourlyRate = parseFloat(employeeData.hourly_rate) || 0;
-                const dailyPay = hours * hourlyRate;
+                // Process each record
+                employeeRecords.forEach(record => {
+                    try {
+                        const recordDate = moment(record.date);
+                        if (!recordDate.isValid()) {
+                            console.error(`Invalid date format for record: ${record.date}`);
+                            return; // Skip this record
+                        }
 
-                timesheet[dayName] = {
-                    hoursWorked: parseFloat(hours.toFixed(3)),
-                    dailyPay: parseFloat(dailyPay.toFixed(2))
-                };
-                weeklyGross += dailyPay;
-            });
+                        const dayName = daysOfWeek[recordDate.day()];
+                        if (!dayName) {
+                            console.error(`Invalid day index: ${recordDate.day()} for date: ${record.date}`);
+                            return; // Skip this record
+                        }
 
-            // Set approval status based on weekly status record or timesheet records
-            let approvalStatus = 'Not Submitted';
-            if (weeklyStatus) {
-                approvalStatus = weeklyStatus.status;
-            } else if (employeeRecords.length > 0) {
-                if (employeeRecords.every(record => record.status === 'approved')) {
-                    approvalStatus = 'Approved';
-                } else if (employeeRecords.every(record => record.status === 'denied')) {
-                    approvalStatus = 'Denied';
-                } else if (employeeRecords.some(record => record.status === 'submitted')) {
-                    approvalStatus = 'Pending';
+                        const hours = parseFloat(record.hoursWorked) || 0;
+                        const hourlyRate = parseFloat(employeeData.hourly_rate) || 0;
+                        const dailyPay = hours * hourlyRate;
+
+                        timesheet[dayName] = {
+                            hoursWorked: parseFloat(hours.toFixed(3)),
+                            dailyPay: parseFloat(dailyPay.toFixed(2))
+                        };
+                        weeklyGross += dailyPay;
+                    } catch (recordError) {
+                        console.error(`Error processing timesheet record for employee ${employeeData.id}:`, recordError);
+                        // Continue with other records
+                    }
+                });
+
+                // Set approval status based on weekly status record or timesheet records
+                let approvalStatus = 'Not Submitted';
+                if (weeklyStatus) {
+                    approvalStatus = weeklyStatus.status;
+                } else if (employeeRecords.length > 0) {
+                    if (employeeRecords.every(record => record.status === 'approved')) {
+                        approvalStatus = 'Approved';
+                    } else if (employeeRecords.every(record => record.status === 'denied')) {
+                        approvalStatus = 'Denied';
+                    } else if (employeeRecords.some(record => record.status === 'submitted')) {
+                        approvalStatus = 'Pending';
+                    }
                 }
-            }
 
-            return {
-                employeeId: employeeData.id,
-                name: employeeData.name,
-                hourlyWage: parseFloat(employeeData.hourly_rate) || 0,
-                approvalStatus: approvalStatus,
-                timesheet: timesheet,
-                weeklyGross: parseFloat(weeklyGross.toFixed(2))
-            };
+                return {
+                    employeeId: employeeData.id,
+                    name: employeeData.name,
+                    hourlyWage: parseFloat(employeeData.hourly_rate) || 0,
+                    approvalStatus: approvalStatus,
+                    timesheet: timesheet,
+                    weeklyGross: parseFloat(weeklyGross.toFixed(2)),
+                    isActive: employeeData.is_active !== false // Default to true if not explicitly false
+                };
+            } catch (employeeError) {
+                console.error(`Error processing timesheet data for employee ${employeeData.id}:`, employeeError);
+                // Return employee with empty/default data rather than failing the entire response
+                return {
+                    employeeId: employeeData.id,
+                    name: employeeData.name,
+                    hourlyWage: parseFloat(employeeData.hourly_rate) || 0,
+                    approvalStatus: 'Error',
+                    timesheet: timesheet,
+                    weeklyGross: 0,
+                    isActive: employeeData.is_active !== false,
+                    error: 'Failed to process timesheet data'
+                };
+            }
         });
 
+        console.log(`DEBUG: Returning timesheet data for ${results.length} employees`);
         return results;
 
     } catch (error) {
         console.error("Error fetching weekly timesheets:", error);
-        throw new Error('Failed to fetch weekly timesheets.');
+        // Return empty array rather than throwing and causing 500 error
+        return [];
     }
 };
 

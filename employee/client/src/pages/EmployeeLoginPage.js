@@ -1,35 +1,36 @@
-import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate, Navigate } from 'react-router-dom';
 import LoginView from '../components/LoginView';
-import { API_BASE_URL } from '../utils/config';
+import { useAuth } from '../contexts/AuthContext';
 
 const EmployeeLoginPage = () => {
   const navigate = useNavigate();
+  const { login, isAuthenticated, error } = useAuth();
+  const [loginError, setLoginError] = useState(null);
+
+  // If already authenticated, redirect to the timesheet page
+  if (isAuthenticated) {
+    return <Navigate to="/employee/timesheet" replace />;
+  }
 
   const handleLoginSubmit = async (email, password) => {
+    setLoginError(null);
+    
     try {
-      const response = await fetch(`${API_BASE_URL}/api/auth/employee/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        alert(data.message || 'Login failed. Please check your credentials.');
+      const success = await login(email, password);
+      
+      if (success) {
+        console.log('Employee Login successful');
+        navigate('/employee/timesheet');
+        return true;
+      } else {
+        // The login function will have set the error in the AuthContext
+        setLoginError(error || 'Login failed. Please check your credentials.');
         return false;
       }
-
-      console.log('Employee Login successful:', data);
-      navigate('/employee/timesheet'); // Navigate to the employee timesheet page via layout
-      return true;
-
-    } catch (error) {
-      console.error('Login request error:', error);
-      alert('An error occurred during login. Please try again.');
+    } catch (err) {
+      console.error('Login request error:', err);
+      setLoginError('An error occurred during login. Please try again.');
       return false;
     }
   };
@@ -42,7 +43,8 @@ const EmployeeLoginPage = () => {
     <LoginView 
       roleName="Employee"
       onSignInSubmit={handleLoginSubmit}
-      onSignUpClick={handleSignUpClick} 
+      onSignUpClick={handleSignUpClick}
+      error={loginError}
     />
   );
 };

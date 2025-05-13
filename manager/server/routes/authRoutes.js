@@ -1,6 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
+const jwt = require('jsonwebtoken');
+const { Manager, Employee, Customer } = require('../models');
 
 // POST /api/auth/manager/signup
 router.post('/manager/signup', authController.managerSignUp);
@@ -20,6 +22,57 @@ router.post('/employee/login', authController.employeeLogin);
 
 // POST /api/auth/customer/login
 router.post('/customer/login', authController.customerLogin);
+
+// Verify token and return user info
+router.get('/verify-token', async (req, res) => {
+  try {
+    // Get token from the authorization header
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+
+    const token = authHeader.split(' ')[1];
+    
+    // Verify token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'atlas-dev-secret');
+    
+    // Find the user by ID and role
+    let user;
+    
+    if (decoded.role === 'manager') {
+      user = await Manager.findByPk(decoded.userId);
+    } else if (decoded.role === 'employee') {
+      user = await Employee.findByPk(decoded.userId);
+    } else if (decoded.role === 'customer') {
+      user = await Customer.findByPk(decoded.userId);
+    } else {
+      return res.status(401).json({ message: 'Invalid user role' });
+    }
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Return user info without sensitive fields
+    const userResponse = {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: decoded.role
+    };
+    
+    // If employee, include hourly rate
+    if (decoded.role === 'employee' && user.hourly_rate) {
+      userResponse.hourlyRate = user.hourly_rate;
+    }
+    
+    return res.json({ user: userResponse });
+  } catch (error) {
+    console.error('Error verifying token:', error);
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+});
 
 // TODO: Add manager login route: router.post('/manager/login', authController.managerLogin);
 // TODO: Add employee login route

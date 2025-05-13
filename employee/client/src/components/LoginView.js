@@ -2,19 +2,26 @@ import React, { useState } from 'react';
 import './LoginView.css';
 // import logo from '../../../../customer/customer/src/logo.svg'; // Removed old logo import
 
-const LoginView = ({ onSignInSubmit, onSignUpClick, roleName }) => {
+const LoginView = ({ onSignInSubmit, onSignUpClick, roleName, error }) => {
   const logoPath = process.env.PUBLIC_URL + '/assets/Atlas-Logo-Final.png';
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [localError, setLocalError] = useState('');
 
   const handleSubmit = async (event) => {
     event.preventDefault();
+    setLocalError('');
+    
     if (!email || !password) {
-      alert('Email and password are required.');
+      setLocalError('Email and password are required.');
       return;
     }
+    
     await onSignInSubmit(email, password);
   };
+
+  // Display either prop error or local validation error
+  const displayError = error || localError;
 
   return (
     <div className="login-view-container">
@@ -22,6 +29,13 @@ const LoginView = ({ onSignInSubmit, onSignUpClick, roleName }) => {
         <img src={logoPath} className="app-logo" alt="App Logo" />
       </div>
       <h2>{roleName} Login</h2>
+      
+      {displayError && (
+        <div className="error-message">
+          {displayError}
+        </div>
+      )}
+      
       <form className="login-form" onSubmit={handleSubmit}>
         <div className="form-group">
           <label htmlFor="email">Email</label>
@@ -54,7 +68,6 @@ const LoginView = ({ onSignInSubmit, onSignUpClick, roleName }) => {
             Sign Up
           </button>
         </p>
-
       </form>
     </div>
   );
