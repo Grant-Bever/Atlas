@@ -13,18 +13,31 @@ steps:
   id: 'Run Migrations'
   args:
   - '-i' # Image to run commands in
-  - 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  - 'gcr.io/google.com/cloudsdktool/cloud-sdk' # Base image with gcloud
   - '-s' # Cloud SQL Instance Connection Name (passed to proxy)
   - '$_DB_INSTANCE_CONNECTION_NAME'
   - '--' # Separator for commands to run
   - 'bash'
   - '-c'
   - |
+    # Install Node.js and npm (common way for Debian-based images like cloud-sdk)
+    apt-get update -y && \
+    apt-get install -y curl && \
+    curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && \
+    apt-get install -y nodejs && \
+    echo "Node.js and npm installed." && \
+    node -v && \
+    npm -v && \
+    
     # Fetch the database password from Secret Manager and export it
     export DB_PASS=$(gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID") && \
     
-    # Install Node.js dependencies within manager/server
+    # Navigate to the server directory (this is correct as exec-wrapper checks out the repo root)
     cd manager/server && \
+    echo "Current directory: $(pwd)" && \
+    ls -la && \
+    
+    # Install Node.js dependencies for the server project
     npm ci && \
     
     # Run migrations using production config (needs env vars)
