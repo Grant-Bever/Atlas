@@ -156,17 +156,23 @@ steps:
     - '-c'
     - |
       # Install Node.js and npm
-      apt-get update -y && apt-get install -y nodejs npm && \\
+      apt-get update -y && apt-get install -y nodejs npm && \
       # Verify installation
-      node -v && npm -v && npx -v && \\
-      # Continue with existing script
-      cd /workspace && \\
-      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt && \\
-      export DB_PASS=$(cat /tmp/db_password.txt) && \\
-      cd manager/server && \\
-      npm install sequelize-cli && \\ # Ensure sequelize-cli is available
+      echo "Node version:" && node -v && echo "NPM version:" && npm -v && echo "NPX version:" && npx -v && \
+      # Navigate to workspace and list contents
+      cd /workspace && \
+      echo "Listing /workspace contents:" && ls -la /workspace && \
+      # Fetch secret
+      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt && \
+      export DB_PASS=$(cat /tmp/db_password.txt) && \
+      # Navigate to server directory and install CLI
+      cd manager/server && \
+      echo "Current directory: $(pwd)" && \
+      npm install sequelize-cli && \
+      # Run migrations
+      echo "Running migrations..." && \
       npx sequelize-cli db:migrate --env production
-  waitFor: ['Build Manager Server'] # Ensure this runs after the server image is built, but before deployment.
+  waitFor: ['Build Manager Server']
 
 images:
 - '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA'
