@@ -148,6 +148,20 @@ steps:
     - '--service-account=$_SERVICE_ACCOUNT_EMAIL' # Recommended
   id: 'Deploy Employee Client'
 
+# === Database Migration Step ===
+- name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+  id: 'db-migrate'
+  entrypoint: 'bash'
+  args:
+    - '-c'
+    - |
+      cd /workspace && \
+      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt && \
+      export DB_PASS=$(cat /tmp/db_password.txt) && \
+      cd manager/server && \
+      npx sequelize-cli db:migrate --env production
+  waitFor: ['-'] # Run after all image builds if not explicitly waiting for a specific image
+
 images:
 - '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/manager-server:$COMMIT_SHA'
 - '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA'
