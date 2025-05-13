@@ -62,6 +62,11 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'fired_at'
+    },
+    role: { // Added role field
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'employee' // Managers will need this explicitly set to 'manager'
     }
   }, {
     sequelize,
