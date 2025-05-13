@@ -39,21 +39,14 @@ app.get('/', (req, res) => {
   res.send('Atlas V2 Server is running!');
 });
 
-// --- Database Synchronization and Server Start ---
-const PORT = process.env.PORT || 3002; // Use port from environment or default to 3002
+// --- Server Start (Database schema managed by migrations) ---
+const PORT = process.env.PORT || 3002;
 
-// Sync database (optional: use { force: true } to drop and recreate tables - USE WITH CAUTION)
-db.sequelize.sync({ force: false })
-  .then(() => {
-    console.log('Database synced.');
-    app.listen(PORT, () => {
-      console.log(`Server listening on port ${PORT}`);
-    });
-  })
-  .catch((err) => {
-    console.error('Unable to sync database:', err);
-    process.exit(1); // Exit if DB sync fails
-  });
+app.listen(PORT, () => {
+  console.log(`Server listening on port ${PORT}`);
+  // Optional: You could add a db.sequelize.authenticate() here to check connection
+  // but migrations should handle the schema setup.
+});
 
 // Optional: Graceful shutdown handling
 process.on('SIGTERM', () => {
