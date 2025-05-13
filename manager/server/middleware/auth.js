@@ -1,6 +1,5 @@
 const jwt = require('jsonwebtoken');
-// const { Employee } = require('../models'); // Adjust path if models are elsewhere
-const { EmployeeManagerModel } = require('../models'); // Use the correct model name
+const { Employee } = require('../models'); // Import the right model
 
 // Middleware to authenticate employee requests using JWT
 const authenticateEmployee = async (req, res, next) => {
@@ -12,12 +11,10 @@ const authenticateEmployee = async (req, res, next) => {
 
   try {
     // Verify the token using your JWT secret
-    // IMPORTANT: Replace 'YOUR_JWT_SECRET' with your actual secret key from .env or config
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'YOUR_JWT_SECRET');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'atlas-dev-secret');
 
     // Find the employee based on the ID in the token payload
-    // const employee = await Employee.findByPk(decoded.id); // Assuming token payload has 'id'
-    const employee = await EmployeeManagerModel.findByPk(decoded.id); // Use the correct model name
+    const employee = await Employee.findByPk(decoded.userId); // Use userId from token
 
     if (!employee) {
       return res.status(401).json({ message: 'Authentication failed: Employee not found.' });
@@ -25,6 +22,9 @@ const authenticateEmployee = async (req, res, next) => {
 
     // Attach the authenticated employee object to the request for later use
     req.employee = employee;
+    // Also attach the user info for routes that expect it in this format
+    req.user = { id: employee.id, role: 'employee' };
+    
     next(); // Proceed to the next middleware or route handler
 
   } catch (error) {
@@ -46,16 +46,13 @@ const isManager = (req, res, next) => {
         return res.status(401).json({ message: 'Authentication required.' });
     }
     // Check if the employee has a manager role/flag
-    // Adjust the condition based on your Employee model (e.g., role === 'manager', isManager === true)
-    // if (req.employee.role !== 'manager') { // Example check - Assuming EmployeeManagerModel has 'role'
-    if (req.employee && req.employee.role !== 'manager') { // Ensure req.employee exists before checking role
+    if (req.employee && req.employee.role !== 'manager') { 
         return res.status(403).json({ message: 'Forbidden: Manager access required.' });
     }
     next(); // User is a manager, proceed
 };
 
-
 module.exports = {
     authenticateEmployee,
-    isManager // Export isManager if you need it elsewhere
+    isManager
 }; 
