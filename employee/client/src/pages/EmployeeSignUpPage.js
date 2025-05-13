@@ -16,31 +16,33 @@ const EmployeeSignUpPage = () => {
         body: JSON.stringify({
           email: formData.email,
           password: formData.password,
-          name: `${formData.name}`, 
+          name: formData.name,
           phoneNumber: formData.phoneNumber,
         }),
       });
 
-      const result = await response.json();
+      const data = await response.json();
 
       if (!response.ok) {
-        alert(`Sign up failed: ${result.message || 'Unknown error'}`);
-        return;
+        alert(data.message || 'Sign up failed. Please try again.');
+        return false;
       }
 
-      alert('Employee account created successfully! Please log in.');
-      navigate('/'); // Navigate to employee login page
+      alert('Account created successfully! Please login.');
+      navigate('/login');
+      return true;
 
     } catch (error) {
       console.error('Sign up request error:', error);
-      alert('Sign up request failed. Please try again.');
+      alert('An error occurred during sign up. Please try again.');
+      return false;
     }
   };
 
   return (
     <SignUpView 
       roleName="Employee"
-      onSubmit={handleSignUpSubmit} 
+      onSignUpSubmit={handleSignUpSubmit}
     />
   );
 };

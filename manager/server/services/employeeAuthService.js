@@ -1,4 +1,5 @@
 const { Employee } = require('../models'); // Assuming Employee model is exported from models/index.js
+const jwt = require('jsonwebtoken');
 
 async function createEmployee(employeeData) {
   try {
@@ -30,9 +31,28 @@ async function loginEmployee(email, password) {
     }
 
     console.log(`Password validation successful for employee ${email} (ID: ${employee.id})`);
-    // Login successful - return employee data (excluding password)
-    const { password_hash, ...employeeData } = employee.get({ plain: true });
-    return { success: true, employee: employeeData };
+    
+    // Generate JWT token
+    const token = jwt.sign(
+      { 
+        userId: employee.id, 
+        email: employee.email,
+        role: 'employee'
+      }, 
+      process.env.JWT_SECRET || 'atlas-dev-secret',
+      { expiresIn: '24h' }
+    );
+    
+    console.log(`JWT token generated for employee ${email} (ID: ${employee.id})`);
+    
+    // Login successful - return employee data (excluding password) and token
+    const { password_hash, encrypted_phone_number, ...employeeData } = employee.get({ plain: true });
+    
+    return { 
+      success: true, 
+      employee: employeeData,
+      token
+    };
 
   } catch (error) {
     console.error('Error in loginEmployee service:', error);

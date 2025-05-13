@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import './SignUpView.css'; 
 // We assume logo is handled by public/assets path now, so no direct import needed for logo file here unless specific structure
 
-const SignUpView = ({ roleName, onSubmit }) => {
+const SignUpView = ({ roleName, onSignUpSubmit }) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -63,7 +63,7 @@ const SignUpView = ({ roleName, onSubmit }) => {
     const fullName = `${firstName} ${lastName}`.trim();
 
     // If all validations pass
-    onSubmit({ 
+    onSignUpSubmit({ 
       email, 
       password, 
       phoneNumber, 

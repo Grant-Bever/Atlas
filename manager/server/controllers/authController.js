@@ -185,8 +185,18 @@ exports.employeeLogin = async (req, res) => {
       return res.status(401).json({ message: result.message }); // Unauthorized
     }
     
-    console.log(`Employee login successful for ${email}, sending response.`);
-    res.status(200).json({ message: 'Employee login successful', employee: result.employee });
+    console.log(`Employee login successful for ${email}, sending response with token.`);
+    res.status(200).json({ 
+      message: 'Employee login successful', 
+      user: {
+        id: result.employee.id,
+        name: result.employee.name,
+        email: result.employee.email,
+        role: 'employee',
+        hourlyRate: result.employee.hourly_rate
+      },
+      token: result.token
+    });
 
   } catch (error) {
     console.error('Employee login error:', error);

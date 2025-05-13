@@ -10,16 +10,20 @@ function App() {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<EmployeeLoginPage />} />
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<EmployeeLoginPage />} />
         <Route path="/signup" element={<EmployeeSignUpPage />} />
         
-        {/* Employee routes */}
+        {/* Employee routes - protected by authentication in EmployeeLayout */}
         <Route path="/employee" element={<EmployeeLayout />}>
           <Route index element={<Navigate to="timesheet" replace />} />
           <Route path="timesheet" element={<Timesheet />} />
           <Route path="orders" element={<EmployeeOrders />} />
           <Route path="inventory" element={<EmployeeInventory />} />
         </Route>
+        
+        {/* Catch any unmatched routes and redirect to login */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
   );
