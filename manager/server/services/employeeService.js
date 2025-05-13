@@ -60,12 +60,15 @@ const calculateHours = (clockIn, clockOut) => {
 
 /**
  * Fetches employee timesheet data for the current week.
- * Includes both active and inactive employees if they have entries for the week.
+ * If managerId is provided, filters timesheets for that manager.
+ * Otherwise, (if managerId is null/undefined) it might fetch for all or based on other criteria (currently fetches all).
+ * @param {number} [managerId] - Optional ID of the manager to filter timesheets for.
  * @returns {Promise<Array<object>>}
  */
-const getWeeklyTimesheets = async () => {
+const getWeeklyTimesheets = async (managerId) => {
     const { startDate, endDate, weekStartDateOnly } = getCurrentWeekDates();
     console.log('DEBUG: Manager View Query Parameters:', {
+        managerIdProvided: managerId,
         weekStartDateOnly,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -73,28 +76,64 @@ const getWeeklyTimesheets = async () => {
     });
 
     try {
-        // Get all employees first
-        const employees = await Employee.findAll({
-            attributes: ['id', 'name', 'hourly_rate', 'email', 'encrypted_phone_number']
-        });
-
-        console.log(`DEBUG: Found ${employees.length} employees`);
-
-        // Get all timesheet records for the week (not just submitted ones)
-        const timesheetRecords = await Timesheet.findAll({
+        // Construct the base query for timesheet records
+        const timesheetQueryOptions = {
             where: {
                 date: {
                     [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
                 }
+            },
+            include: [
+                { model: Employee, as: 'employee', attributes: ['id', 'name', 'hourly_rate', 'email', 'is_active'] }, // Include employee details
+                // No need to include Manager here as we filter by manager_id if provided
+            ]
+        };
+
+        if (managerId) {
+            console.log(`DEBUG: Filtering timesheets for manager_id: ${managerId}`);
+            timesheetQueryOptions.where.manager_id = managerId;
+        } else {
+            console.log('DEBUG: managerId not provided, fetching timesheets without manager_id filter (current behavior may need review for non-manager context).');
+            // If no managerId, the original behavior was to fetch all. 
+            // Consider if this service should ONLY be for managers or if it needs to handle both cases explicitly.
+        }
+
+        // Get all relevant timesheet records for the week, potentially filtered by manager_id
+        const timesheetRecords = await Timesheet.findAll(timesheetQueryOptions);
+
+        console.log(`DEBUG: Found ${timesheetRecords.length} timesheet records for the week (managerId: ${managerId})`);
+
+        // Deduce unique employee IDs from the fetched timesheet records
+        const employeeIdsFromTimesheets = [...new Set(timesheetRecords.map(ts => ts.employeeId))];
+        
+        // If no timesheets, no employees to process based on these timesheets
+        if (employeeIdsFromTimesheets.length === 0) {
+            console.log('DEBUG: No timesheet records found, returning empty array.');
+            return [];
+        }
+
+        // Fetch employee details for only those employees who have timesheets (if not already included sufficiently)
+        // The include in timesheetQueryOptions should already provide necessary Employee details.
+        // const employees = await Employee.findAll({
+        //     where: { id: { [Op.in]: employeeIdsFromTimesheets } },
+        //     attributes: ['id', 'name', 'hourly_rate', 'email', 'is_active'] 
+        // });
+        // For simplicity and because Employee is included: create a map of employees from timesheetRecords
+        const employeesMap = new Map();
+        timesheetRecords.forEach(record => {
+            if (record.employee && !employeesMap.has(record.employee.id)) {
+                employeesMap.set(record.employee.id, record.employee.get({ plain: true }));
             }
         });
+        const employees = Array.from(employeesMap.values());
 
-        console.log(`DEBUG: Found ${timesheetRecords.length} timesheet records for the week`);
+        console.log(`DEBUG: Processing timesheets for ${employees.length} employees who have records this week (managerId: ${managerId})`);
 
-        // Get weekly status records
+        // Get weekly status records for these specific employees
         const weeklyStatuses = await WeeklyTimesheetStatus.findAll({
             where: {
-                weekStartDate: weekStartDateOnly
+                weekStartDate: weekStartDateOnly,
+                employeeId: { [Op.in]: employeeIdsFromTimesheets } // Filter by relevant employee IDs
             }
         });
 
@@ -117,12 +156,12 @@ const getWeeklyTimesheets = async () => {
             });
 
             try {
-                // Find this employee's timesheet records
+                // Find this employee's timesheet records from the pre-fetched set
                 const employeeRecords = timesheetRecords.filter(record => 
                     record.employeeId === employeeData.id
                 );
 
-                // Find weekly status for this employee
+                // Find weekly status for this employee from the pre-fetched set
                 const weeklyStatus = weeklyStatuses.find(status => 
                     status.employeeId === employeeData.id
                 );

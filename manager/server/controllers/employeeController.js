@@ -3,8 +3,20 @@ const employeeService = require('../services/employeeService');
 // Controller to get weekly timesheets
 const getWeeklyTimesheets = async (req, res) => {
     try {
-        console.log('Controller: getWeeklyTimesheets - Fetching timesheet data');
-        const timesheets = await employeeService.getWeeklyTimesheets();
+        // Assuming the logged-in user is a manager and their ID is what's needed
+        // The `authenticateEmployee` middleware should have populated `req.employee`
+        const managerId = req.employee ? req.employee.id : null;
+
+        // It's crucial that routes using this controller for manager-specific views
+        // are protected by `isManager` middleware to ensure `req.employee` is a manager.
+        // Or, the service needs to handle cases where managerId might not be relevant
+        // for a general employee list (if this controller serves dual purposes).
+
+        // For now, we'll pass managerId. The service will decide how to use it.
+        // If managerId is null and the service expects it for filtering, it might return empty or error.
+        console.log(`Controller: getWeeklyTimesheets - Fetching timesheet data. Manager ID from req.employee: ${managerId}`);
+        
+        const timesheets = await employeeService.getWeeklyTimesheets(managerId); // Pass managerId
         
         // Even if we get an empty array, return a 200 with the empty data
         if (!timesheets || timesheets.length === 0) {
