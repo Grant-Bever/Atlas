@@ -14,18 +14,10 @@
     "dialect": "postgres"
   },
   "production": {
-    "username": {
-      "ENV": "DB_USER"
-    },
-    "password": {
-      "ENV": "DB_PASS"
-    },
-    "database": {
-      "ENV": "DB_NAME"
-    },
-    "host": {
-      "ENV": "DB_HOST"
-    },
+    "username": "postgres",
+    "password": "PASSWORD_WILL_BE_PROVIDED_BY_ENV",
+    "database": "atlas-db",
+    "host": "/cloudsql/atlas-planner:us-east1:atlas-db",
     "dialect": "postgres",
     "dialectOptions": {
       "ssl": false
