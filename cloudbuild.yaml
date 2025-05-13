@@ -16,7 +16,7 @@ steps:
   - 'gcr.io/google.com/cloudsdktool/cloud-sdk' # Base image with gcloud
   - '-s' # Cloud SQL Instance Connection Name (passed to proxy)
   - '$_DB_INSTANCE_CONNECTION_NAME'
-  - '--# Separator for commands to run
+  - '--' # Separator for commands to run
   - 'bash'
   - '-c'
   - |
