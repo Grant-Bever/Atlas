@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Totals.css'; // Ensure this CSS file exists
+import { API_BASE_URL } from '../utils/config';
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
@@ -18,7 +19,7 @@ function ManagerTotals() {
       setLoading(true);
       setError(null);
       try {
-        const response = await fetch(`${API_BASE_URL}/totals/weekly`);
+        const response = await fetch(`${API_ENDPOINT}/totals/weekly`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }

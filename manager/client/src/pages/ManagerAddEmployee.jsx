@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/FormPage.css'; // Shared form styles
 import '../styles/Modal.css';  // Use existing modal styles
+import { API_BASE_URL } from '../utils/config';
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 // --- REMOVED Sample Data Fetching ---
 // const fetchEmployeeData = (employeeId) => { ... }; // REMOVED
@@ -34,7 +35,7 @@ function AddEmployee() {
     if (isEditing) {
       setIsLoading(true);
       setError(null); // Clear previous errors
-      fetch(`${API_BASE_URL}/employees/${employeeId}`) // Use actual endpoint
+      fetch(`${API_ENDPOINT}/employees/${employeeId}`) // Use actual endpoint
         .then(res => {
           if (!res.ok) {
             if (res.status === 404) {
@@ -108,7 +109,7 @@ function AddEmployee() {
     }
 
 
-    const url = isEditing ? `${API_BASE_URL}/employees/${employeeId}` : `${API_BASE_URL}/employees`;
+    const url = isEditing ? `${API_ENDPOINT}/employees/${employeeId}` : `${API_ENDPOINT}/employees`;
     const method = isEditing ? 'PUT' : 'POST';
 
     console.log(`Attempting ${method} request to ${url}`); // Debug log start

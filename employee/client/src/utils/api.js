@@ -1,9 +1,9 @@
 import axios from 'axios';
+import { API_BASE_URL } from './config';
 
-// Placeholder for API utility functions
-// Typically, you would configure base URL, headers, etc. here
+// Configure axios with the base URL from config
 const apiClient = axios.create({
-  baseURL: process.env.REACT_APP_API_URL || 'http://localhost:3002', // Set base URL to backend server
+  baseURL: API_BASE_URL,
   // timeout: 1000,
   // headers: {'X-Custom-Header': 'foobar'}
 });

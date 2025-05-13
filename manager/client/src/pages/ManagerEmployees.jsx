@@ -6,9 +6,10 @@ import '../styles/Table.css'; // Reusing action menu styles from Table.css
 import '../styles/Modal.css'; // Reusing modal styles
 import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaEllipsisV, FaCheckCircle, FaTimesCircle, FaUndo } from 'react-icons/fa';
 import { formatTimeTo12Hour } from '../utils/formatTime'; // Import the utility function
+import { API_BASE_URL } from '../utils/config';
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 // --- Sample Data ---
 // In a real app, employee details and hours would come from the backend.
@@ -82,7 +83,7 @@ function ManagerEmployees() {
     setError(null);
     setActionError(null); // Clear action errors on refetch
     try {
-      const response = await fetch(`${API_BASE_URL}/employees/timesheets/weekly`);
+      const response = await fetch(`${API_ENDPOINT}/employees/timesheets/weekly`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -151,7 +152,7 @@ function ManagerEmployees() {
     e.stopPropagation();
     setOpenEmployeeMenuId(null); // Close menu if open
     setActionError(null);
-    const url = `${API_BASE_URL}/employees/${employeeId}/reinstate`;
+    const url = `${API_ENDPOINT}/employees/${employeeId}/reinstate`;
     try {
       const response = await fetch(url, { method: 'PATCH' });
       if (!response.ok) {
@@ -198,7 +199,7 @@ function ManagerEmployees() {
   const handleConfirmFire = async () => {
     const { employeeId, employeeName } = fireModalState;
     setActionError(null);
-    const url = `${API_BASE_URL}/employees/${employeeId}/fire`;
+    const url = `${API_ENDPOINT}/employees/${employeeId}/fire`;
     try {
       const response = await fetch(url, { method: 'PATCH' });
       if (!response.ok) {
@@ -230,7 +231,7 @@ function ManagerEmployees() {
     setActionError(null);
 
     const endpointAction = actionType === 'approve' ? 'approve' : 'deny';
-    const url = `${API_BASE_URL}/employees/${employeeId}/timesheets/weekly/${endpointAction}`;
+    const url = `${API_ENDPOINT}/employees/${employeeId}/timesheets/weekly/${endpointAction}`;
 
     try {
       const response = await fetch(url, { 
@@ -324,113 +325,4 @@ function ManagerEmployees() {
                          {/* NEW: Timesheet Approval Actions */}
                          <div className="timesheet-approval-actions">
                              <button
-                                title={isApprovedOrDenied ? `Timesheet already ${employee.approvalStatus.toLowerCase()}` : (isFired ? 'Cannot approve fired employee timesheet' : 'Approve Timesheet')}
-                                className="button button-success button-small"
-                                onClick={(e) => handleApproveClick(e, employee.employeeId, employee.name)}
-                                disabled={employee.approvalStatus !== 'Pending'}
-                             >
-                                <FaCheckCircle /> Approve
-                             </button>
-                             <button
-                                title={isApprovedOrDenied ? `Timesheet already ${employee.approvalStatus.toLowerCase()}` : (isFired ? 'Cannot deny fired employee timesheet' : 'Deny Timesheet')}
-                                className="button button-warning button-small"
-                                onClick={(e) => handleDenyClick(e, employee.employeeId, employee.name)}
-                                disabled={employee.approvalStatus !== 'Pending'}
-                             >
-                                <FaTimesCircle /> Deny
-                             </button>
-                         </div>
-                         {/* Action Menu REMOVED as per request */}
-                         {/* 
-                         <div className="employee-action-menu-container action-menu-container">
-                            <button
-                                onClick={(e) => handleEmployeeMenuToggle(e, employee.employeeId)}
-                                className="icon-button menu-dots-button">
-                               <FaEllipsisV />
-                            </button>
-                            {isMenuOpen && (
-                                <div className="action-menu">
-                                   {employee.isActive ? (
-                                       <button onClick={(e) => handleFireClick(e, employee.employeeId, employee.name)} className="danger">
-                                           <FaTrashAlt /> Fire Employee
-                                       </button>
-                                   ) : (
-                                       <button onClick={(e) => handleUndoFireClick(e, employee.employeeId, employee.name)} className="secondary">
-                                           <FaUndo /> Undo Fire
-                                       </button>
-                                   )}
-                                </div>
-                            )}
-                         </div>
-                         */}
-                    </div>
-                </div>
-                
-                {/* Timesheet List */}
-                <div className="timesheet-list">
-                  <div className="timesheet-header-row">
-                     <span>Day</span>
-                     <span>Hours Worked</span>
-                     <span>Daily Pay</span>
-                  </div>
-                  {daysOfWeek.map(day => {
-                    const dayData = employee.timesheet[day] || { hoursWorked: 0.000, dailyPay: 0.00 };
-                    return (
-                      <div key={day} className="timesheet-item">
-                        <span>{day}</span>
-                        <span>{dayData.hoursWorked.toFixed(3)}</span>
-                        <span>${dayData.dailyPay.toFixed(2)}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-                <div className="card-weekly-gross">
-                  <span>Weekly Gross:</span>
-                  <span>${employee.weeklyGross.toFixed(2)}</span>
-                </div>
-              </div>
-            );
-          })
-        ) : (
-           !loading && <p className="no-data-message">No employee timesheets available for the current week.</p> // Show only if not loading
-        )}
-      </div>
-
-      {/* Fire Confirmation Modal */}
-      {fireModalState.isOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h4>Confirm Firing Employee</h4>
-            <p>Are you sure you want to fire <strong>{fireModalState.employeeName}</strong>? This marks them inactive. You can undo this action from the menu on their timesheet card *this week only*.</p>
-            <div className="modal-actions">
-              <button onClick={handleCancelFire} className="button button-secondary">Cancel</button>
-              <button onClick={handleConfirmFire} className="button button-danger">Confirm Fire</button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* NEW: Generic Confirmation Modal for Approve/Deny */}
-      {confirmationModalState.isOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h4>{confirmationModalState.title}</h4>
-            <p>{confirmationModalState.message}</p>
-            <div className="modal-actions">
-              <button onClick={handleCancelAction} className="button button-secondary">Cancel</button>
-              <button
-                onClick={handleConfirmAction}
-                 // Use success style for approve confirm, danger for deny confirm
-                className={`button ${confirmationModalState.actionType === 'approve' ? 'button-success' : 'button-danger'}`}
-              >
-                Confirm {confirmationModalState.actionType === 'approve' ? 'Approval' : 'Denial'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </ManagerLayout>
-  );
-}
-
-export default ManagerEmployees; 
+                                title={isApprovedOrDenied ? `

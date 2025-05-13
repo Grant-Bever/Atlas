@@ -4,9 +4,10 @@ import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Import Modal styles
 import { FaPlus, FaEdit, FaTrashAlt, FaSearch, FaUpload, FaChevronDown, FaChevronRight, FaEllipsisV, FaCheckSquare, FaHistory, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa';
+import { API_BASE_URL } from '../utils/config';
 
-// Base URL for the API (Consider moving this to a config file)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
+// Base URL for the API
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 function ManagerActiveOrders() {
   const navigate = useNavigate();
@@ -39,7 +40,7 @@ function ManagerActiveOrders() {
       const queryString = params.toString();
 
       try {
-        const response = await fetch(`${API_BASE_URL}/orders/active?${queryString}`);
+        const response = await fetch(`${API_ENDPOINT}/orders/active?${queryString}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -134,7 +135,7 @@ function ManagerActiveOrders() {
       let response;
       if (type === 'delete') {
         console.log(`Deleting order: ${orderId}`);
-        response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        response = await fetch(`${API_ENDPOINT}/orders/${orderId}`, {
           method: 'DELETE',
         });
         if (!response.ok) {
@@ -151,7 +152,7 @@ function ManagerActiveOrders() {
 
       } else if (type === 'complete') {
         console.log(`Marking order ${orderId} complete.`);
-        response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+        response = await fetch(`${API_ENDPOINT}/orders/${orderId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',

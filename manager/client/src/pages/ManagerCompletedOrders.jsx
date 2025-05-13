@@ -4,9 +4,10 @@ import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Keep for potential future modals
 import { FaSearch, FaChevronDown, FaChevronRight, FaEllipsisV, FaEye, FaTrashAlt, FaArrowLeft, FaSort, FaSortUp, FaSortDown } from 'react-icons/fa'; // Adjusted icons
+import { API_BASE_URL } from '../utils/config';
 
-// Base URL for the API (Consider moving this to a config file)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+// Base URL for the API
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 function ManagerCompletedOrders() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ function ManagerCompletedOrders() {
       const queryString = params.toString();
 
       try {
-        const response = await fetch(`${API_BASE_URL}/orders/completed?${queryString}`);
+        const response = await fetch(`${API_ENDPOINT}/orders/completed?${queryString}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -128,7 +129,7 @@ function ManagerCompletedOrders() {
 
     try {
       console.log(`Deleting completed order: ${orderId}`);
-      const response = await fetch(`${API_BASE_URL}/orders/${orderId}`, {
+      const response = await fetch(`${API_ENDPOINT}/orders/${orderId}`, {
         method: 'DELETE',
       });
 

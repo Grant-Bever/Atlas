@@ -3,9 +3,10 @@ import { useNavigate, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import { FaPlus, FaTrashAlt } from 'react-icons/fa';
 import '../styles/InvoiceForm.css';
+import { API_BASE_URL } from '../utils/config';
 
-// Base URL for the API (Consider moving this to a config file)
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+// Base URL for the API
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 // Function to get formatted date yyyy-mm-dd
 const getFormattedDate = (date = new Date()) => {
@@ -37,7 +38,7 @@ function ManagerNewInvoice() {
       setIsLoading(true);
       setError(null);
       try {
-          const response = await fetch(`${API_BASE_URL}/orders/${orderId}`);
+          const response = await fetch(`${API_ENDPOINT}/orders/${orderId}`);
           if (!response.ok) {
              if (response.status === 404) {
                  throw new Error(`Invoice with ID ${orderId} not found.`);
@@ -176,7 +177,7 @@ function ManagerNewInvoice() {
             };
 
             console.log(`UPDATING Invoice ${orderId} with payload:`, updatePayload);
-            response = await fetch(`${API_BASE_URL}/orders/${orderId}`, { // Use the orderId in the URL
+            response = await fetch(`${API_ENDPOINT}/orders/${orderId}`, { // Use the orderId in the URL
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(updatePayload),
@@ -203,7 +204,7 @@ function ManagerNewInvoice() {
               completed: false,
             };
             console.log("SAVING New Invoice:", createPayload);
-            response = await fetch(`${API_BASE_URL}/orders`, {
+            response = await fetch(`${API_ENDPOINT}/orders`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(createPayload),

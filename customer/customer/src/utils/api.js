@@ -1,17 +1,16 @@
 import axios from 'axios';
-
-const API_BASE_URL = 'http://localhost:3002/api/customer';
+import { API_BASE_URL } from './config';
 
 const api = {
   // Product endpoints
-  getProducts: () => axios.get(`${API_BASE_URL}/products`),
-  getProductsByCategory: (categoryId) => axios.get(`${API_BASE_URL}/products/category/${categoryId}`),
-  getCategories: () => axios.get(`${API_BASE_URL}/categories`),
+  getProducts: () => axios.get(`${API_BASE_URL}/api/customer/products`),
+  getProductsByCategory: (categoryId) => axios.get(`${API_BASE_URL}/api/customer/products/category/${categoryId}`),
+  getCategories: () => axios.get(`${API_BASE_URL}/api/customer/categories`),
   
   // Order endpoints
-  createOrder: (orderData) => axios.post(`${API_BASE_URL}/orders`, orderData),
-  getOrders: (customerId) => axios.get(`${API_BASE_URL}/orders/${customerId}`),
-  getOrderDetails: (orderId) => axios.get(`${API_BASE_URL}/orders/details/${orderId}`),
+  createOrder: (orderData) => axios.post(`${API_BASE_URL}/api/customer/orders`, orderData),
+  getOrders: (customerId) => axios.get(`${API_BASE_URL}/api/customer/orders/${customerId}`),
+  getOrderDetails: (orderId) => axios.get(`${API_BASE_URL}/api/customer/orders/details/${orderId}`),
 };
 
 export default api;

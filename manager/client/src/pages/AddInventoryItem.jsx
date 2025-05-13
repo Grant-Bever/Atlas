@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/FormPage.css'; // Shared form styles
+import { API_BASE_URL } from '../utils/config';
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 // --- REMOVE Sample Data Fetching ---
 // const fetchInventoryItemData = (itemId) => { ... }; // REMOVED
@@ -45,7 +46,7 @@ function AddInventoryItem() {
 
     // Promise for fetching item data ONLY if editing
     const itemDataPromise = isEditing
-        ? fetch(`${API_BASE_URL}/inventory/${itemId}`)
+        ? fetch(`${API_ENDPOINT}/inventory/${itemId}`)
             .then(res => {
                 if (!res.ok) {
                     if (res.status === 404) {
@@ -145,7 +146,7 @@ function AddInventoryItem() {
             if (isEditing) {
                 console.log(`UPDATING Item ${itemId}:`, itemPayload);
                 // --- Update Item API Call ---
-                response = await fetch(`${API_BASE_URL}/inventory/${itemId}`, {
+                response = await fetch(`${API_ENDPOINT}/inventory/${itemId}`, {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(itemPayload)
@@ -154,7 +155,7 @@ function AddInventoryItem() {
             } else {
                 console.log("SAVING New Item:", itemPayload);
                 // --- Create Item API Call ---
-                response = await fetch(`${API_BASE_URL}/inventory`, {
+                response = await fetch(`${API_ENDPOINT}/inventory`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(itemPayload)

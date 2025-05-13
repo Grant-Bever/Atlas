@@ -6,9 +6,10 @@ import '../styles/Inventory.css';
 import '../styles/Table.css'; // For action menu
 import '../styles/Modal.css'; // For modal styles
 import { FaPlus, FaSearch, FaChevronDown, FaChevronRight, FaEllipsisV, FaEdit, FaTrashAlt } from 'react-icons/fa';
+import { API_BASE_URL } from '../utils/config';
 
 // Base URL for the API
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:3002/api';
+const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 function ManagerInventory() {
     const navigate = useNavigate();
@@ -34,7 +35,7 @@ function ManagerInventory() {
         setError(null);
         setActionError(null);
         try {
-            const response = await fetch(`${API_BASE_URL}/inventory`);
+            const response = await fetch(`${API_ENDPOINT}/inventory`);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -129,7 +130,7 @@ function ManagerInventory() {
         }
 
         setActionError(null);
-        const url = `${API_BASE_URL}/inventory/${currentItemForQty.id}/add-quantity`;
+        const url = `${API_ENDPOINT}/inventory/${currentItemForQty.id}/add-quantity`;
 
         try {
             const response = await fetch(url, {
@@ -155,7 +156,7 @@ function ManagerInventory() {
     const handleConfirmDelete = async () => {
         if (!currentItemForDelete) return;
         setActionError(null);
-        const url = `${API_BASE_URL}/inventory/${currentItemForDelete.id}`;
+        const url = `${API_ENDPOINT}/inventory/${currentItemForDelete.id}`;
 
         try {
             const response = await fetch(url, { method: 'DELETE' });
