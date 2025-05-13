@@ -65,7 +65,7 @@ steps:
     # Run migrations using production config
     # sequelize-cli will use DB_USER, DB_NAME, DB_HOST from the 'env' block below,
     # and DB_PASS will be set to SCRIPT_DB_PASS for this command's environment.
-    echo "Running migrations... DB_USER:$DB_USER, DB_NAME:$DB_NAME, DB_HOST:$DB_HOST"
+    echo "Running migrations... DB_USER:\$DB_USER, DB_NAME:\$DB_NAME, DB_HOST:\$DB_HOST"
     DB_PASS="$SCRIPT_DB_PASS" npx sequelize-cli db:migrate --env production
     echo "Migrations complete."
   env:
