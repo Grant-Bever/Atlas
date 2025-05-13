@@ -15,7 +15,7 @@
   },
   "production": {
     "username": "postgres",
-    "password": "PASSWORD_WILL_BE_PROVIDED_BY_ENV",
+    "password": "${process.env.DB_PASS}",
     "database": "atlas-db",
     "host": "/cloudsql/atlas-planner:us-east1:atlas-db",
     "dialect": "postgres",
