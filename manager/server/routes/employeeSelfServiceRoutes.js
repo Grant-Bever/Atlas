@@ -2,24 +2,47 @@ const express = require('express');
 const router = express.Router();
 const employeeTimesheetController = require('../controllers/employeeTimesheetController');
 const payPeriodController = require('../controllers/payPeriodController');
+const jwt = require('jsonwebtoken'); // Make sure jwt is installed
 
-// Presumed middleware for authenticating an employee and attaching user info to req (e.g., req.user.id)
-// Replace 'authenticateEmployee' with your actual authentication middleware for employees
+// Improved middleware for authenticating an employee
 const authenticateEmployee = (req, res, next) => {
-  // Placeholder: In a real app, this would verify JWT, session, etc.
-  // and set req.user (or req.employee) with authenticated employee details including id.
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer employeeToken')) { // Example check
-    req.user = { id: 1 }; // Example: Hardcoding employee ID 1 for testing. REPLACE THIS.
-    return next();
+  console.log('AUTH: Employee authentication middleware invoked');
+  
+  // Extract the token from Authorization header
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    console.warn('AUTH: No Bearer token in Authorization header');
+    return res.status(401).json({ message: 'Unauthorized: Missing authentication token' });
   }
-  // return res.status(401).json({ message: 'Unauthorized: Employee access required.' });
-  // For now, let's assume for testing, we can proceed if no auth for local dev
-  // but in production this must be secured.
-  if (!req.user) {
-      console.warn('Bypassing employee authentication for route. Ensure this is safe for your environment or add real auth.');
-      req.user = { id: 1 }; // Default to employee 1 if no auth, for dev purposes ONLY.
+
+  const token = authHeader.split(' ')[1];
+  
+  try {
+    // Verify the token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'atlas-dev-secret');
+    console.log('AUTH: JWT token decoded successfully', { 
+      employeeId: decoded.userId,
+      role: decoded.role
+    });
+    
+    // Ensure it's an employee token
+    if (decoded.role !== 'employee') {
+      console.warn('AUTH: Token is not for an employee role', { role: decoded.role });
+      return res.status(403).json({ message: 'Forbidden: Employee access required' });
+    }
+    
+    // Set user info on request object
+    req.user = { 
+      id: decoded.userId,
+      role: decoded.role
+    };
+    
+    console.log('AUTH: Employee authenticated successfully', { employeeId: req.user.id });
+    next();
+  } catch (error) {
+    console.error('AUTH: JWT verification error', error);
+    return res.status(401).json({ message: 'Unauthorized: Invalid token' });
   }
-  next();
 };
 
 // --- Employee Self-Service Timesheet Routes ---

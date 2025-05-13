@@ -2,11 +2,28 @@ const { PayPeriod, Employee } = require('../models'); // Adjust if Employee is n
 const { Op } = require('sequelize');
 const moment = require('moment-timezone'); // For robust date/time handling
 
-// Helper to get the start (Sunday) and end (Saturday) of the week for a given date
+// Helper to get the start (Saturday) and end (Friday) of the week for a given date
+// Aligning with employeeService.js which uses Saturday as start of week
 const getWeekRange = (dateInput) => {
   const date = moment(dateInput).tz('America/New_York'); // Use a specific timezone
-  const startDate = date.clone().startOf('week'); // Sunday
-  const endDate = date.clone().endOf('week');   // Saturday
+  
+  // Find the most recent Saturday (start of the week)
+  const startDate = date.clone().startOf('day');
+  while (startDate.day() !== 6) { // 6 is Saturday
+      startDate.subtract(1, 'day');
+  }
+  
+  // End date is the following Friday at end of day
+  const endDate = startDate.clone().add(6, 'days').endOf('day');
+
+  console.log('DEBUG payPeriodService - Date calculations:', {
+    inputDate: date.format(),
+    startDate: startDate.format(),
+    endDate: endDate.format(),
+    startDay: startDate.day(),
+    endDay: endDate.day()
+  });
+
   return {
     startDate: startDate.format('YYYY-MM-DD'),
     endDate: endDate.format('YYYY-MM-DD'),
