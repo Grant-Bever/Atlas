@@ -53,15 +53,19 @@ steps:
     npm ci
     echo "Dependencies installed."
     
-    # Run migrations without any local variable assignments
-    echo "Running migrations with file-based password..."
-    # Save password to file first to avoid special character issues
+    # Run direct database connection test first
+    echo "Running direct database connection test..."
     gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt
-    # Print stats about the password file without revealing content
     echo "Password file stats:"
     wc -c /tmp/db_password.txt | awk '{print "  Length: " $1 " bytes"}'
-    # Run migrations by reading password from file directly
-    cat /tmp/db_password.txt | DB_USER="postgres" DB_NAME="atlas-db" DB_HOST="/cloudsql/$_DB_INSTANCE_CONNECTION_NAME" DB_PASS="$(cat)" npx sequelize-cli db:migrate --env production
+    echo "First 1 character: $(head -c 1 /tmp/db_password.txt | xxd -p)"
+    echo "Testing connection with simple pg client..."
+    DB_USER="postgres" DB_NAME="atlas-db" DB_HOST="/cloudsql/$_DB_INSTANCE_CONNECTION_NAME" DB_PASS="$(cat /tmp/db_password.txt)" node db-test.js
+    echo "Database test complete."
+    
+    # Only run migrations if connection test passes (the above should exit on failure due to set -e)
+    echo "Running migrations..."
+    DB_USER="postgres" DB_NAME="atlas-db" DB_HOST="/cloudsql/$_DB_INSTANCE_CONNECTION_NAME" DB_PASS="$(cat /tmp/db_password.txt)" npx sequelize-cli db:migrate --env production
     echo "Migrations complete."
 
 # === Deploy Manager Server to Cloud Run ===
