@@ -156,22 +156,41 @@ steps:
     - '-c'
     - |
       # Install Node.js and npm
-      apt-get update -y && apt-get install -y nodejs npm && \
-      # Verify installation
-      echo "Node version:" && node -v && echo "NPM version:" && npm -v && echo "NPX version:" && npx -v && \
+      apt-get update -y && apt-get install -y nodejs npm
+      INSTALL_EXIT_CODE=$?
+      if [ $INSTALL_EXIT_CODE -ne 0 ]; then echo "Node/npm install failed with code $INSTALL_EXIT_CODE"; exit $INSTALL_EXIT_CODE; fi
+      echo "Node/npm install successful."
+      echo "Node version: $(node -v), NPM version: $(npm -v), NPX version: $(npx -v)"
+      
       # Navigate to workspace and list contents
-      cd /workspace && \
-      echo "Listing /workspace contents:" && ls -la /workspace && \
+      cd /workspace
+      CD_WORKSPACE_EXIT_CODE=$?
+      if [ $CD_WORKSPACE_EXIT_CODE -ne 0 ]; then echo "cd /workspace failed with code $CD_WORKSPACE_EXIT_CODE"; exit $CD_WORKSPACE_EXIT_CODE; fi
+      echo "Current directory: $(pwd)"
+      echo "Listing /workspace contents:"
+      ls -la /workspace
+      
       # Fetch secret
-      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt && \
-      export DB_PASS=$(cat /tmp/db_password.txt) && \
-      # Navigate to server directory and install CLI
-      cd manager/server && \
-      echo "Current directory: $(pwd)" && \
-      npm install sequelize-cli && \
-      # Run migrations
-      echo "Running migrations..." && \
+      gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID" > /tmp/db_password.txt
+      SECRET_EXIT_CODE=$?
+      if [ $SECRET_EXIT_CODE -ne 0 ]; then echo "Secret fetch failed with code $SECRET_EXIT_CODE"; exit $SECRET_EXIT_CODE; fi
+      export DB_PASS=$(cat /tmp/db_password.txt)
+      echo "Secret fetched."
+      
+      # Navigate to server directory, install CLI and run migrations
+      cd manager/server
+      CD_SERVER_EXIT_CODE=$?
+      if [ $CD_SERVER_EXIT_CODE -ne 0 ]; then echo "cd manager/server failed with code $CD_SERVER_EXIT_CODE"; pwd && ls -la .; exit $CD_SERVER_EXIT_CODE; fi
+      echo "Current directory: $(pwd)"
+      echo "Installing sequelize-cli..."
+      npm install sequelize-cli
+      NPM_INSTALL_EXIT_CODE=$?
+      if [ $NPM_INSTALL_EXIT_CODE -ne 0 ]; then echo "npm install sequelize-cli failed with code $NPM_INSTALL_EXIT_CODE"; exit $NPM_INSTALL_EXIT_CODE; fi
+      echo "Running migrations..."
       npx sequelize-cli db:migrate --env production
+      MIGRATE_EXIT_CODE=$?
+      if [ $MIGRATE_EXIT_CODE -ne 0 ]; then echo "Migration failed with code $MIGRATE_EXIT_CODE"; exit $MIGRATE_EXIT_CODE; fi
+      echo "Migrations completed successfully."
   waitFor: ['Build Manager Server']
 
 images:
