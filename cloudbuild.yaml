@@ -30,11 +30,6 @@ steps:
     echo "Node.js and npm installed successfully."
     echo "Node version: $(node -v), NPM version: $(npm -v), NPX version: $(npx -v)"
     
-    # Fetch secret directly, without creating a variable
-    echo "Fetching database password from Secret Manager..."
-    SECRET_VALUE=$(gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID")
-    echo "Database password fetched."
-    
     # Check workspace content before changing directory
     echo "Current directory before cd: $(pwd)"
     echo "Listing /workspace contents:"
@@ -58,10 +53,10 @@ steps:
     npm ci
     echo "Dependencies installed."
     
-    # Run migrations using inline environment overrides (no exports)
-    echo "Running migrations directly with inline environment variables..."
-    # Note: We use $SECRET_VALUE directly to avoid having any problematic environment variable names
-    DB_USER="$_DB_USER" DB_NAME="$_DB_NAME" DB_HOST="/cloudsql/$_DB_INSTANCE_CONNECTION_NAME" DB_PASS="$SECRET_VALUE" npx sequelize-cli db:migrate --env production
+    # Run migrations - NO variables, everything inlined
+    echo "Running migrations with NO shell variables..."
+    # Inline the gcloud command output directly into DB_PASS
+    DB_USER="$_DB_USER" DB_NAME="$_DB_NAME" DB_HOST="/cloudsql/$_DB_INSTANCE_CONNECTION_NAME" DB_PASS="$(gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID")" npx sequelize-cli db:migrate --env production
     echo "Migrations complete."
 
 # === Deploy Manager Server to Cloud Run ===
