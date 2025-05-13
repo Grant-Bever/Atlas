@@ -31,8 +31,8 @@ Object.keys(db).forEach(modelName => {
   }
 });
 
-// Export Employee specifically if needed elsewhere easily
-// db.Employee = require('./EmployeeManagerModel')(sequelize, Sequelize.DataTypes);
+// Explicitly export Employee model to ensure consistency
+db.Employee = require('./EmployeeManagerModel')(sequelize, Sequelize.DataTypes);
 // db.TimesheetEntry = require('./TimesheetEntryModel')(sequelize, Sequelize.DataTypes);
 // db.WeeklyTimesheetStatus = require('./WeeklyTimesheetStatusModel')(sequelize, Sequelize.DataTypes);
 
