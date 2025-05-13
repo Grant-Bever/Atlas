@@ -18,8 +18,33 @@ const app = express();
 // Trust the first proxy hop (common for Cloud Run/Load Balancers)
 app.set('trust proxy', 1); 
 
-// Middleware
-app.use(cors()); // Enable Cross-Origin Resource Sharing for frontend requests
+// Define allowed origins
+const allowedOrigins = [
+  'https://manager-client-671804272646.us-east1.run.app',
+  'https://customer-client-671804272646.us-east1.run.app',
+  'https://employee-client-671804272646.us-east1.run.app'
+];
+
+// In development, also allow localhost
+if (process.env.NODE_ENV !== 'production') {
+  allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002');
+}
+
+// CORS configuration
+app.use(cors({
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) === -1) {
+      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+      return callback(new Error(msg), false);
+    }
+    return callback(null, true);
+  },
+  credentials: true // Allow cookies
+}));
+
 app.use(express.json()); // Parse incoming request bodies in JSON format
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
 
