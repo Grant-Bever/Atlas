@@ -159,9 +159,12 @@ exports.managerLogin = async (req, res) => {
       return res.status(401).json({ message: result.message }); // Unauthorized
     }
 
-    // On success, send back manager data (excluding password_hash)
-    // In a real app, you would generate and send a JWT here
-    res.status(200).json({ message: 'Manager login successful', manager: result.manager });
+    // On success, send back manager data and the token
+    res.status(200).json({
+      message: 'Manager login successful',
+      manager: result.manager,
+      token: result.token // Include the token in the response
+    });
 
   } catch (error) {
     console.error('Manager login error:', error);

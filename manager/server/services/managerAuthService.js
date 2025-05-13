@@ -1,4 +1,6 @@
 const { Manager } = require('../models'); // Assuming models/index.js exports all models
+const jwt = require('jsonwebtoken'); // Import jsonwebtoken
+const bcrypt = require('bcrypt'); // bcrypt might already be in ManagerModel, but good for direct use if needed elsewhere
 
 async function createManager(managerData) {
   try {
@@ -26,9 +28,22 @@ async function loginManager(email, password) {
       return { success: false, message: 'Invalid password.' };
     }
 
-    // Login successful - return manager data (excluding password)
+    // Login successful, generate JWT
+    const payload = {
+      userId: manager.id,
+      email: manager.email,
+      role: 'manager' // Explicitly set role for the token
+      // Add other relevant non-sensitive info if needed
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET || 'atlas-dev-secret', // Use the same secret as in your middleware
+      { expiresIn: '24h' } // Token expiration time (e.g., 1 hour, 24 hours)
+    );
+
     const { password_hash, ...managerData } = manager.get({ plain: true });
-    return { success: true, manager: managerData };
+    return { success: true, manager: managerData, token: token }; // Return the token
 
   } catch (error) {
     console.error('Error in loginManager service:', error);
