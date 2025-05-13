@@ -60,6 +60,16 @@ module.exports = (sequelize, DataTypes) => {
         model: 'PayPeriods',
         key: 'id'
       }
+    },
+    manager_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: {
+        model: 'managers',
+        key: 'id'
+      },
+      onUpdate: 'CASCADE',
+      onDelete: 'SET NULL'
     }
   }, {
     tableName: 'Timesheets',
@@ -77,9 +87,16 @@ module.exports = (sequelize, DataTypes) => {
       foreignKey: 'payPeriodId',
       as: 'payPeriod'
     });
-    Timesheet.hasMany(models.TimesheetEntry, {
-      foreignKey: 'timesheetId',
-      as: 'entries'
+    if (models.Employee) {
+        Timesheet.belongsTo(models.Employee, {
+            foreignKey: 'reviewedBy',
+            as: 'reviewer',
+            constraints: false
+        });
+    }
+    Timesheet.belongsTo(models.Manager, {
+      foreignKey: 'manager_id',
+      as: 'manager'
     });
   };
 
