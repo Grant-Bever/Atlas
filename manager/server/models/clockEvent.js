@@ -18,6 +18,9 @@ module.exports = (sequelize, DataTypes) => {
       allowNull: false,
       defaultValue: DataTypes.NOW
     }
+  }, {
+    tableName: 'clock_events',
+    timestamps: true
   });
 
   ClockEvent.associate = (models) => {
