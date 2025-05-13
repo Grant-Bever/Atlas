@@ -32,6 +32,10 @@ steps:
     # Fetch the database password from Secret Manager and export it
     export DB_PASS=$(gcloud secrets versions access latest --secret="db-password" --project="$PROJECT_ID") && \
     
+    # List current directory content for debugging
+    echo "Listing /workspace content:" && \
+    ls -la && \
+    
     # Navigate to the server directory (this is correct as exec-wrapper checks out the repo root)
     cd manager/server && \
     echo "Current directory: $(pwd)" && \
