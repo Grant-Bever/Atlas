@@ -179,9 +179,17 @@ steps:
       echo "Database password fetched."
       
       # Navigate to server directory, install CLI and run migrations
-      echo "Changing to manager/server directory..."
+      echo "Preparing to change to manager/server directory..."
+      echo "Confirming current directory is /workspace: $(pwd)"
+      echo "Checking existence and permissions of /workspace/manager:"
+      ls -ld /workspace/manager || echo "/workspace/manager not found or inaccessible"
+      echo "Checking existence and permissions of /workspace/manager/server:"
+      ls -ld /workspace/manager/server || echo "/workspace/manager/server not found or inaccessible"
+      
+      echo "Attempting: cd manager/server"
       cd manager/server
-      echo "Current directory: $(pwd)"
+      echo "Successfully changed to $(pwd)"
+      
       echo "Listing manager/server contents:"
       ls -la .
       
