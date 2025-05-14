@@ -106,7 +106,13 @@ steps:
 
 # === CUSTOMER CLIENT (Frontend) ===
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA', './customer/customer']
+  args: [
+    'build',
+    '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/customer-client:$COMMIT_SHA',
+    '--build-arg', 'REACT_APP_OPENAI_API_KEY=${_OPENAI_API_KEY}',
+    '--build-arg', 'REACT_APP_TAVILY_API_KEY=${_TAVILY_API_KEY}',
+    './customer/customer'
+  ]
   id: 'Build Customer Client'
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -154,7 +160,12 @@ steps:
 
 # === EMPLOYEE CLIENT (Frontend) ===
 - name: 'gcr.io/cloud-builders/docker'
-  args: ['build', '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA', './employee/client']
+  args: [
+    'build',
+    '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA',
+    '--build-arg', 'REACT_APP_API_BASE_URL=${https://manager-server-671804272646.us-east1.run.app}',
+    './employee/client'
+  ]
   id: 'Build Employee Client'
 
 - name: 'gcr.io/cloud-builders/docker'
@@ -196,6 +207,9 @@ substitutions:
   # _DB_PASS: is now handled by Secret Manager in the deploy step above
   _DB_NAME: 'atlas-db' # Your database name
   _SERVICE_ACCOUNT_EMAIL: 'cloud-run-executor@atlas-planner.iam.gserviceaccount.com' # Your Cloud Run service account
+  _MANAGER_SERVER_URL: 'https://manager-server-671804272646.us-east1.run.app' # Using actual manager server URL
+  _OPENAI_API_KEY: 'your_openai_api_key_secret_name_or_value' # Placeholder for OpenAI API Key
+  _TAVILY_API_KEY: 'your_tavily_api_key_secret_name_or_value' # Placeholder for Tavily API Key
 
 options:
   logging: CLOUD_LOGGING_ONLY

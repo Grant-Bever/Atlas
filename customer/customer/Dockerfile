@@ -3,18 +3,26 @@ FROM node:18-alpine AS builder
 
 WORKDIR /app
 
+# ARG and ENV for OpenAI API Key
+ARG REACT_APP_OPENAI_API_KEY
+ENV REACT_APP_OPENAI_API_KEY=${REACT_APP_OPENAI_API_KEY}
+
+# ARG and ENV for Tavily API Key
+ARG REACT_APP_TAVILY_API_KEY
+ENV REACT_APP_TAVILY_API_KEY=${REACT_APP_TAVILY_API_KEY}
+
 # Copy package.json and package-lock.json (or yarn.lock)
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy the rest of the application source code
 COPY . .
 
 # Build the application for production
 # Ensure your package.json has a "build" script
-RUN npm run build
+RUN NODE_OPTIONS=--openssl-legacy-provider npm run build
 
 # Stage 2: Serve the static files with Nginx
 FROM nginx:1.25-alpine

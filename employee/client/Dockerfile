@@ -14,6 +14,8 @@ COPY . .
 
 # Build the application for production
 # Ensure your package.json has a "build" script
+ARG REACT_APP_API_BASE_URL
+ENV REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL}
 RUN NODE_OPTIONS=--openssl-legacy-provider npm run build
 
 # Stage 2: Serve the static files with Nginx
