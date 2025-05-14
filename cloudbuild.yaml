@@ -163,7 +163,7 @@ steps:
   args: [
     'build',
     '-t', '$_AR_HOSTNAME/$PROJECT_ID/$_AR_REPO/employee-client:$COMMIT_SHA',
-    '--build-arg', 'REACT_APP_API_BASE_URL=${https://manager-server-671804272646.us-east1.run.app}',
+    '--build-arg', 'REACT_APP_API_BASE_URL=${_MANAGER_SERVER_URL}',
     './employee/client'
   ]
   id: 'Build Employee Client'
