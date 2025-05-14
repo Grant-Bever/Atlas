@@ -102,7 +102,7 @@ app.get('/', (req, res) => {
 // --- Server Start (Database schema managed by migrations) ---
 const PORT = process.env.PORT || 3002;
 
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   console.log(`Server listening on port ${PORT}`);
   // Optional: You could add a db.sequelize.authenticate() here to check connection
   // but migrations should handle the schema setup.

@@ -106,10 +106,22 @@ const submitTimesheetForPayPeriod = async (employeeId, payPeriodId) => {
     throw new Error('Employee ID and Pay Period ID are required.');
   }
 
-  // 1. Update all Timesheet entries to 'submitted' for this pay period
-  console.log('DEBUG: Updating Timesheet entries to submitted status');
+  // Employee.managerId no longer exists, so we don't fetch the employee for that purpose here.
+  // const employee = await Employee.findByPk(employeeId);
+  // if (!employee) {
+  //   console.error(`SERVICE: submitTimesheetForPayPeriod - Employee ${employeeId} not found.`);
+  //   throw new Error('Employee not found.');
+  // }
+  // const managerId = employee.managerId; // This line is removed
+
+  // 1. Update all Timesheet entries to 'submitted' for this pay period.
+  // manager_id is no longer being set here as it was sourced from Employee.managerId.
+  console.log(`DEBUG: Updating Timesheet entries to submitted status for employee ${employeeId}`);
   const [numberOfAffectedRows, affectedRows] = await Timesheet.update(
-    { status: 'submitted' },
+    { 
+      status: 'submitted'
+      // manager_id: managerId // This line is removed
+    },
     {
       where: {
         employeeId: employeeId,

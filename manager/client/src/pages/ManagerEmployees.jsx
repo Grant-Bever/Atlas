@@ -82,21 +82,44 @@ function ManagerEmployees() {
     setLoading(true);
     setError(null);
     setActionError(null); // Clear action errors on refetch
+
+    const token = localStorage.getItem('token'); // Or sessionStorage, or from context
+    const headers = {
+      'Content-Type': 'application/json',
+    };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    } else {
+      console.error("No token found, cannot fetch timesheets.");
+      setError("Authentication token not found. Please log in again.");
+      setLoading(false);
+      setEmployeesTimesheets([]);
+      // navigate('/login'); // Optional: redirect to login. Make sure navigate is in deps if used.
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_ENDPOINT}/employees/timesheets/weekly`);
+      const response = await fetch(`${API_ENDPOINT}/employees/timesheets/weekly`, { headers }); // Pass headers
       if (!response.ok) {
+        if (response.status === 401) {
+           setError("Unauthorized: Could not fetch timesheets. Please ensure you are logged in as a manager and try again.");
+        } else {
+           setError(`HTTP error! status: ${response.status}. Failed to load timesheets.`);
+        }
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json();
       setEmployeesTimesheets(data);
     } catch (e) {
       console.error("Failed to fetch weekly timesheets:", e);
-      setError("Failed to load timesheets. Please try again later.");
+      if (!error) { // if setError wasn't called in the try block for a !response.ok
+          setError(e.message || "Failed to load timesheets. Please try again later.");
+      }
       setEmployeesTimesheets([]); // Clear data on error
     } finally {
       setLoading(false);
     }
-  }, []); // Empty dependency array means this useCallback doesn't change
+  }, [setError, setLoading, setEmployeesTimesheets, error]); // Added error and other setters to dependencies
 
   useEffect(() => {
     fetchTimesheets();

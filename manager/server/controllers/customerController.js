@@ -1,6 +1,7 @@
 const db = require('../models');
 const { Invoice, InvoiceItem, Customer, Inventory } = db;
 const { Op } = require('sequelize');
+const { encryptData } = require('../utils/securityUtils');
 
 // Get all available products (inventory)
 const getProducts = async (req, res) => {
@@ -69,26 +70,39 @@ const getCategories = async (req, res) => {
 const createOrder = async (req, res) => {
   const { customerInfo, items, total } = req.body;
   
-  if (!customerInfo || !items || !Array.isArray(items) || items.length === 0 || total === undefined) {
-    return res.status(400).json({ message: 'Missing required order data' });
+  if (!customerInfo || !customerInfo.name || !customerInfo.phone || !items || !Array.isArray(items) || items.length === 0 || total === undefined) {
+    return res.status(400).json({ message: 'Missing required order data (customer name, phone, items, total).' });
   }
   
   const transaction = await db.sequelize.transaction();
   
   try {
+    const trimmedPhone = customerInfo.phone.trim();
+    const encryptedPhone = trimmedPhone ? encryptData(trimmedPhone) : null;
+
+    // Prepare a placeholder email if not provided by the customer (as it's optional in checkout but required in DB)
+    const finalEmail = customerInfo.email || `${customerInfo.name.trim().replace(/\s+/g, '.').toLowerCase()}.${Date.now()}@placeholder.atlas.com`;
+
     // Find or create customer
     const [customer, created] = await Customer.findOrCreate({
       where: { 
-        phone: customerInfo.phone 
+        encrypted_phone_number: encryptedPhone 
       },
       defaults: {
-        name: customerInfo.name,
-        email: customerInfo.email || null,
-        password: null // No password for customer-created via order
+        name: customerInfo.name.trim(),
+        encrypted_phone_number: encryptedPhone,
+        email: finalEmail, // Use the potentially placeholder email
+        password_hash: '__TEMP_PASS_FOR_CUSTOMER_ORDER__' // Provide placeholder for hashing
       },
       transaction
     });
     
+    if (created) {
+      console.log(`CUSTOMER CHECKOUT: Created new customer: ${customer.name} (ID: ${customer.id})`);
+    } else {
+      console.log(`CUSTOMER CHECKOUT: Found existing customer: ${customer.name} (ID: ${customer.id})`);
+    }
+
     // Create invoice
     const invoice = await Invoice.create({
       customer_id: customer.id,

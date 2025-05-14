@@ -3,8 +3,19 @@ const employeeService = require('../services/employeeService');
 // Controller to get weekly timesheets
 const getWeeklyTimesheets = async (req, res) => {
     try {
-        console.log('Controller: getWeeklyTimesheets - Fetching timesheet data');
-        const timesheets = await employeeService.getWeeklyTimesheets();
+        // The route is now protected by `authenticateManager`, which populates `req.manager`
+        const managerId = req.manager ? req.manager.id : null;
+
+        if (!managerId) {
+            // This case should ideally not be reached if authenticateManager is working correctly
+            // and requires a manager to be logged in.
+            console.error('Controller: getWeeklyTimesheets - managerId is null. req.manager:', req.manager);
+            return res.status(401).json({ message: 'Manager authentication failed or manager ID not found.' });
+        }
+
+        console.log(`Controller: getWeeklyTimesheets - Fetching timesheet data for Manager ID: ${managerId}`);
+        
+        const timesheets = await employeeService.getWeeklyTimesheets(managerId);
         
         // Even if we get an empty array, return a 200 with the empty data
         if (!timesheets || timesheets.length === 0) {
@@ -131,15 +142,18 @@ const reinstateEmployee = async (req, res) => {
 // Controller to add a new employee
 const addEmployee = async (req, res) => {
     try {
-        // TODO: Add input validation here (e.g., using express-validator)
-        // Fields expected based on frontend: name, email, phone, hourly_rate
-        // Password handling needs clarification (is it set here or via email?)
-        // The service should handle password hashing if set here.
         const newEmployeeData = req.body;
 
-        // Assuming password is NOT set directly via this payload
-        // If it is, ensure service handles hashing
-        // delete newEmployeeData.password; 
+        // The managerId field is removed from the Employee model, so no longer setting it here.
+        // if (!req.manager || !req.manager.id) {
+        //     console.error('Controller: addEmployee - Manager ID not found in request. This should not happen if authenticateManager is working.');
+        //     return res.status(401).json({ message: 'Manager authentication failed or manager ID not found.' });
+        // }
+        // newEmployeeData.managerId = req.manager.id;
+
+        // Assuming password is NOT set directly via this payload for initial creation
+        // If password needs to be set, ensure service handles hashing.
+        // It's common to have a separate flow for password setup (e.g., email invite).
 
         const createdEmployee = await employeeService.addEmployee(newEmployeeData);
         res.status(201).json(createdEmployee); // 201 Created

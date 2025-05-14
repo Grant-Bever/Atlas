@@ -1,7 +1,23 @@
 const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
 
 module.exports = (sequelize, DataTypes) => {
-  const Manager = sequelize.define('Manager', {
+  class Manager extends Model {
+    /**
+     * Helper method for defining associations.
+     * This method is not a part of Sequelize lifecycle.
+     * The `models/index` file will call this method automatically.
+     */
+    static associate(models) {
+      Manager.hasMany(models.Timesheet, { foreignKey: 'manager_id', as: 'timesheets' });
+      Manager.hasMany(models.Inventory, { foreignKey: 'manager_id', as: 'inventoryItems' });
+    }
+
+    // Instance method to validate password
+    async validatePassword(password) {
+      return bcrypt.compare(password, this.password_hash);
+    }
+  }
+  Manager.init({
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,

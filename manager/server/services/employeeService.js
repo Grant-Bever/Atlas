@@ -5,44 +5,43 @@ const moment = require('moment-timezone'); // Ensure moment-timezone is imported
 const { sequelize } = require('../config/database');
 
 /**
- * Calculates the start (Monday) and end (Sunday) dates of the current week in America/New_York.
+ * Calculates the start (Monday) and end (Saturday) dates of the current week in America/New_York.
  * @returns {{startDate: Date, endDate: Date, weekStartDateOnly: string}}
  */
 const getCurrentWeekDates = () => {
     const now = moment().tz('America/New_York');
     
-    // Find the most recent Saturday (start of the week)
+    // Find the most recent Monday (start of the week)
+    // moment.js day(): Sunday=0, Monday=1, ..., Saturday=6
     const startOfWeek = now.clone().startOf('day');
-    while (startOfWeek.day() !== 6) { // 6 is Saturday
+    while (startOfWeek.day() !== 1) { // 1 is Monday
         startOfWeek.subtract(1, 'day');
     }
     
-    // End date is the following Friday at end of day
-    const endOfWeek = startOfWeek.clone().add(6, 'days').endOf('day');
+    // End date is the Saturday of the current week
+    const endOfWeek = startOfWeek.clone().add(5, 'days').endOf('day'); // Monday + 5 days = Saturday
 
-    // Get Saturday's date in YYYY-MM-DD format for database queries
+    // Get Monday's date in YYYY-MM-DD format for database queries
     const weekStartDateOnly = startOfWeek.format('YYYY-MM-DD');
 
-    console.log('DEBUG: Date calculations in getCurrentWeekDates:', {
+    console.log('DEBUG: Date calculations in getCurrentWeekDates (Mon-Sat):', {
         now: now.format(),
-        weekStartDate: weekStartDateOnly,
+        weekStartDate: weekStartDateOnly, // This is Monday
+        weekEndDateForQuery: endOfWeek.format('YYYY-MM-DD'), // This is Saturday, for querying Timesheets.date
         startDateTime: startOfWeek.format(),
         endDateTime: endOfWeek.format(),
         payPeriodRange: `${startOfWeek.format('MM/DD/YYYY')} - ${endOfWeek.format('MM/DD/YYYY')}`,
         nowDay: now.day(),
-        startDay: startOfWeek.day(),
-        endDay: endOfWeek.day(),
-        // Add more detailed debug info
-        startDateUnix: startOfWeek.unix(),
-        endDateUnix: endOfWeek.unix(),
+        startDay: startOfWeek.day(), // Should be 1 (Monday)
+        endDay: endOfWeek.day(),   // Should be 6 (Saturday)
         startDateISO: startOfWeek.toISOString(),
         endDateISO: endOfWeek.toISOString()
     });
 
     return { 
-        startDate: startOfWeek.toDate(),
-        endDate: endOfWeek.toDate(),
-        weekStartDateOnly
+        startDate: startOfWeek.toDate(), // Monday Date object
+        endDate: endOfWeek.toDate(),     // Saturday Date object
+        weekStartDateOnly // Monday YYYY-MM-DD string
     };
 };
 
@@ -60,41 +59,84 @@ const calculateHours = (clockIn, clockOut) => {
 
 /**
  * Fetches employee timesheet data for the current week.
- * Includes both active and inactive employees if they have entries for the week.
+ * If managerId is provided, filters timesheets for that manager.
+ * Otherwise, (if managerId is null/undefined) it might fetch for all or based on other criteria (currently fetches all).
+ * @param {number} [managerId] - Optional ID of the manager to filter timesheets for.
  * @returns {Promise<Array<object>>}
  */
-const getWeeklyTimesheets = async () => {
+const getWeeklyTimesheets = async (managerId) => {
     const { startDate, endDate, weekStartDateOnly } = getCurrentWeekDates();
-    console.log('DEBUG: Manager View Query Parameters:', {
-        weekStartDateOnly,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+    // endDate from getCurrentWeekDates is now Saturday endOf('day')
+    // weekStartDateOnly is Monday YYYY-MM-DD
+    // The Timesheet query should go from Monday (weekStartDateOnly) to Saturday (moment(endDate).format('YYYY-MM-DD'))
+
+    console.log('DEBUG: Manager View Query Parameters (Mon-Sat week):', {
+        requestingManagerId: managerId,
+        weekStartDateForQuery: weekStartDateOnly, // Monday
+        weekEndDateForQuery: moment(endDate).format('YYYY-MM-DD'), // Saturday
         currentTime: moment().tz('America/New_York').format()
     });
 
     try {
-        // Get all employees first
-        const employees = await Employee.findAll({
-            attributes: ['id', 'name', 'hourly_rate', 'email', 'encrypted_phone_number']
-        });
-
-        console.log(`DEBUG: Found ${employees.length} employees`);
-
-        // Get all timesheet records for the week (not just submitted ones)
-        const timesheetRecords = await Timesheet.findAll({
+        // Construct the base query for timesheet records for the current week (Monday-Saturday)
+        const timesheetQueryOptions = {
             where: {
                 date: {
-                    [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
+                    [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')] // Monday to Saturday
                 }
+                // No longer filtering by manager_id here
+            },
+            include: [
+                { 
+                    model: Employee, 
+                    as: 'employee', 
+                    attributes: ['id', 'name', 'hourly_rate', 'email', 'is_active', 'managerId'],
+                    // Optionally, if you still want to know who the employee's assigned manager is:
+                    // include: [{ model: db.Manager, as: 'manager', attributes: ['id', 'name'] }]
+                }
+            ]
+        };
+
+        // The block that added manager_id to the query is now removed.
+        // console.log(`DEBUG: Filtering timesheets for manager_id: ${managerId}`);
+        // timesheetQueryOptions.where.manager_id = managerId; 
+
+        // Get all relevant timesheet records for the week
+        const timesheetRecords = await Timesheet.findAll(timesheetQueryOptions);
+
+        console.log(`DEBUG: Found ${timesheetRecords.length} timesheet records for the week (managerId: ${managerId})`);
+
+        // Deduce unique employee IDs from the fetched timesheet records
+        const employeeIdsFromTimesheets = [...new Set(timesheetRecords.map(ts => ts.employeeId))];
+        
+        // If no timesheets, no employees to process based on these timesheets
+        if (employeeIdsFromTimesheets.length === 0) {
+            console.log('DEBUG: No timesheet records found, returning empty array.');
+            return [];
+        }
+
+        // Fetch employee details for only those employees who have timesheets (if not already included sufficiently)
+        // The include in timesheetQueryOptions should already provide necessary Employee details.
+        // const employees = await Employee.findAll({
+        //     where: { id: { [Op.in]: employeeIdsFromTimesheets } },
+        //     attributes: ['id', 'name', 'hourly_rate', 'email', 'is_active'] 
+        // });
+        // For simplicity and because Employee is included: create a map of employees from timesheetRecords
+        const employeesMap = new Map();
+        timesheetRecords.forEach(record => {
+            if (record.employee && !employeesMap.has(record.employee.id)) {
+                employeesMap.set(record.employee.id, record.employee.get({ plain: true }));
             }
         });
+        const employees = Array.from(employeesMap.values());
 
-        console.log(`DEBUG: Found ${timesheetRecords.length} timesheet records for the week`);
+        console.log(`DEBUG: Processing timesheets for ${employees.length} employees who have records this week (managerId: ${managerId})`);
 
-        // Get weekly status records
+        // Get weekly status records for these specific employees
         const weeklyStatuses = await WeeklyTimesheetStatus.findAll({
             where: {
-                weekStartDate: weekStartDateOnly
+                weekStartDate: weekStartDateOnly,
+                employeeId: { [Op.in]: employeeIdsFromTimesheets } // Filter by relevant employee IDs
             }
         });
 
@@ -117,12 +159,12 @@ const getWeeklyTimesheets = async () => {
             });
 
             try {
-                // Find this employee's timesheet records
+                // Find this employee's timesheet records from the pre-fetched set
                 const employeeRecords = timesheetRecords.filter(record => 
                     record.employeeId === employeeData.id
                 );
 
-                // Find weekly status for this employee
+                // Find weekly status for this employee from the pre-fetched set
                 const weeklyStatus = weeklyStatuses.find(status => 
                     status.employeeId === employeeData.id
                 );
