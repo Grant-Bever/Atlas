@@ -5,44 +5,43 @@ const moment = require('moment-timezone'); // Ensure moment-timezone is imported
 const { sequelize } = require('../config/database');
 
 /**
- * Calculates the start (Monday) and end (Sunday) dates of the current week in America/New_York.
+ * Calculates the start (Monday) and end (Saturday) dates of the current week in America/New_York.
  * @returns {{startDate: Date, endDate: Date, weekStartDateOnly: string}}
  */
 const getCurrentWeekDates = () => {
     const now = moment().tz('America/New_York');
     
-    // Find the most recent Saturday (start of the week)
+    // Find the most recent Monday (start of the week)
+    // moment.js day(): Sunday=0, Monday=1, ..., Saturday=6
     const startOfWeek = now.clone().startOf('day');
-    while (startOfWeek.day() !== 6) { // 6 is Saturday
+    while (startOfWeek.day() !== 1) { // 1 is Monday
         startOfWeek.subtract(1, 'day');
     }
     
-    // End date is the following Friday at end of day
-    const endOfWeek = startOfWeek.clone().add(6, 'days').endOf('day');
+    // End date is the Saturday of the current week
+    const endOfWeek = startOfWeek.clone().add(5, 'days').endOf('day'); // Monday + 5 days = Saturday
 
-    // Get Saturday's date in YYYY-MM-DD format for database queries
+    // Get Monday's date in YYYY-MM-DD format for database queries
     const weekStartDateOnly = startOfWeek.format('YYYY-MM-DD');
 
-    console.log('DEBUG: Date calculations in getCurrentWeekDates:', {
+    console.log('DEBUG: Date calculations in getCurrentWeekDates (Mon-Sat):', {
         now: now.format(),
-        weekStartDate: weekStartDateOnly,
+        weekStartDate: weekStartDateOnly, // This is Monday
+        weekEndDateForQuery: endOfWeek.format('YYYY-MM-DD'), // This is Saturday, for querying Timesheets.date
         startDateTime: startOfWeek.format(),
         endDateTime: endOfWeek.format(),
         payPeriodRange: `${startOfWeek.format('MM/DD/YYYY')} - ${endOfWeek.format('MM/DD/YYYY')}`,
         nowDay: now.day(),
-        startDay: startOfWeek.day(),
-        endDay: endOfWeek.day(),
-        // Add more detailed debug info
-        startDateUnix: startOfWeek.unix(),
-        endDateUnix: endOfWeek.unix(),
+        startDay: startOfWeek.day(), // Should be 1 (Monday)
+        endDay: endOfWeek.day(),   // Should be 6 (Saturday)
         startDateISO: startOfWeek.toISOString(),
         endDateISO: endOfWeek.toISOString()
     });
 
     return { 
-        startDate: startOfWeek.toDate(),
-        endDate: endOfWeek.toDate(),
-        weekStartDateOnly
+        startDate: startOfWeek.toDate(), // Monday Date object
+        endDate: endOfWeek.toDate(),     // Saturday Date object
+        weekStartDateOnly // Monday YYYY-MM-DD string
     };
 };
 
@@ -67,20 +66,23 @@ const calculateHours = (clockIn, clockOut) => {
  */
 const getWeeklyTimesheets = async (managerId) => {
     const { startDate, endDate, weekStartDateOnly } = getCurrentWeekDates();
-    console.log('DEBUG: Manager View Query Parameters (ALL TIMESHEETS MODE):', {
-        requestingManagerId: managerId, // Log who is asking, but will not filter by it
-        weekStartDateOnly,
-        startDate: startDate.toISOString(),
-        endDate: endDate.toISOString(),
+    // endDate from getCurrentWeekDates is now Saturday endOf('day')
+    // weekStartDateOnly is Monday YYYY-MM-DD
+    // The Timesheet query should go from Monday (weekStartDateOnly) to Saturday (moment(endDate).format('YYYY-MM-DD'))
+
+    console.log('DEBUG: Manager View Query Parameters (Mon-Sat week):', {
+        requestingManagerId: managerId,
+        weekStartDateForQuery: weekStartDateOnly, // Monday
+        weekEndDateForQuery: moment(endDate).format('YYYY-MM-DD'), // Saturday
         currentTime: moment().tz('America/New_York').format()
     });
 
     try {
-        // Construct the base query for timesheet records for the current week for ALL employees
+        // Construct the base query for timesheet records for the current week (Monday-Saturday)
         const timesheetQueryOptions = {
             where: {
                 date: {
-                    [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
+                    [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')] // Monday to Saturday
                 }
                 // No longer filtering by manager_id here
             },

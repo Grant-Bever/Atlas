@@ -13,11 +13,6 @@ module.exports = (sequelize, DataTypes) => {
         foreignKey: 'employee_id',
         as: 'weeklyStatuses'
       });
-      Employee.belongsTo(models.Manager, {
-        foreignKey: 'managerId',
-        as: 'manager',
-        allowNull: true
-      });
     }
 
     // Instance method to validate password
@@ -72,17 +67,6 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       defaultValue: 'employee' // Managers will need this explicitly set to 'manager'
-    },
-    managerId: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: {
-        model: 'managers',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'SET NULL',
-      field: 'manager_id'
     }
   }, {
     sequelize,

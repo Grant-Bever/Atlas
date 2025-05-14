@@ -106,30 +106,26 @@ const submitTimesheetForPayPeriod = async (employeeId, payPeriodId) => {
     throw new Error('Employee ID and Pay Period ID are required.');
   }
 
-  // Fetch the employee to get their managerId
-  const employee = await Employee.findByPk(employeeId);
-  if (!employee) {
-    console.error(`SERVICE: submitTimesheetForPayPeriod - Employee ${employeeId} not found.`);
-    throw new Error('Employee not found.');
-  }
-  const managerId = employee.managerId; // Assuming managerId field exists on Employee model
+  // Employee.managerId no longer exists, so we don't fetch the employee for that purpose here.
+  // const employee = await Employee.findByPk(employeeId);
+  // if (!employee) {
+  //   console.error(`SERVICE: submitTimesheetForPayPeriod - Employee ${employeeId} not found.`);
+  //   throw new Error('Employee not found.');
+  // }
+  // const managerId = employee.managerId; // This line is removed
 
-  // 1. Update all Timesheet entries to 'submitted' for this pay period AND set manager_id
-  console.log(`DEBUG: Updating Timesheet entries to submitted status and manager_id: ${managerId} for employee ${employeeId}`);
+  // 1. Update all Timesheet entries to 'submitted' for this pay period.
+  // manager_id is no longer being set here as it was sourced from Employee.managerId.
+  console.log(`DEBUG: Updating Timesheet entries to submitted status for employee ${employeeId}`);
   const [numberOfAffectedRows, affectedRows] = await Timesheet.update(
     { 
-      status: 'submitted',
-      manager_id: managerId // Set the manager_id here
+      status: 'submitted'
+      // manager_id: managerId // This line is removed
     },
     {
       where: {
         employeeId: employeeId,
-        payPeriodId: payPeriodId,
-        // Optionally, only update if manager_id is currently null or different
-        // [Op.or]: [
-        //   { manager_id: null },
-        //   { manager_id: { [Op.ne]: managerId } }
-        // ]
+        payPeriodId: payPeriodId
       },
       returning: true
     }

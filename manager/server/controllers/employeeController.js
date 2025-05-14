@@ -144,12 +144,12 @@ const addEmployee = async (req, res) => {
     try {
         const newEmployeeData = req.body;
 
-        // Ensure the manager creating the employee is assigned as their manager
-        if (!req.manager || !req.manager.id) {
-            console.error('Controller: addEmployee - Manager ID not found in request. This should not happen if authenticateManager is working.');
-            return res.status(401).json({ message: 'Manager authentication failed or manager ID not found.' });
-        }
-        newEmployeeData.managerId = req.manager.id;
+        // The managerId field is removed from the Employee model, so no longer setting it here.
+        // if (!req.manager || !req.manager.id) {
+        //     console.error('Controller: addEmployee - Manager ID not found in request. This should not happen if authenticateManager is working.');
+        //     return res.status(401).json({ message: 'Manager authentication failed or manager ID not found.' });
+        // }
+        // newEmployeeData.managerId = req.manager.id;
 
         // Assuming password is NOT set directly via this payload for initial creation
         // If password needs to be set, ensure service handles hashing.
