@@ -61,5 +61,4 @@ async function testConnection() {
 }
 
 // Export both the sequelize instance and the test function
-module.exports = sequelize;
-module.exports.testConnection = testConnection; 
+module.exports = sequelize; 
