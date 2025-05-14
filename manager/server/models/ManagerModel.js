@@ -1,7 +1,8 @@
+const { Model } = require('sequelize'); // Added this import
 const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
 
 module.exports = (sequelize, DataTypes) => {
-  class Manager extends sequelize.Model {
+  class Manager extends Model { // Changed to extend Model from the import
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
