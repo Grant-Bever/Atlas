@@ -26,7 +26,7 @@ const ManagerLoginPage = () => {
       if (data.token) {
         localStorage.setItem('token', data.token);
         console.log('Manager Login successful, token stored:', data.token);
-        navigate('/orders'); // Navigate to Manager Active Orders page
+        history.push('/orders'); // Navigate to Manager Active Orders page
         return true;
       } else {
         console.error('Login successful, but no token received from server.', data);
