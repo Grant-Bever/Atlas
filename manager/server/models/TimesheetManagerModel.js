@@ -1,13 +1,7 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Timesheet extends Model {
-    static associate(models) {
-      Timesheet.belongsTo(models.Manager, { foreignKey: 'manager_id', as: 'manager' });
-      Timesheet.hasMany(models.Workday, { foreignKey: 'timesheet_id', as: 'workdays' });
-    }
-  }
-  Timesheet.init({
+  const Timesheet = sequelize.define('Timesheet', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -38,10 +32,15 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'SET NULL' // Matches schema definition
     }
   }, {
-    sequelize,
     modelName: 'Timesheet',
     tableName: 'timesheets',
     timestamps: false
   });
+
+  Timesheet.associate = (models) => {
+    Timesheet.belongsTo(models.Manager, { foreignKey: 'manager_id', as: 'manager' });
+    Timesheet.hasMany(models.Workday, { foreignKey: 'timesheet_id', as: 'workdays' });
+  };
+
   return Timesheet;
 }; 

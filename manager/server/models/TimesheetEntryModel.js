@@ -1,21 +1,5 @@
-const { Model } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
-  class TimesheetEntry extends Model {
-    static associate(models) {
-      // An entry belongs to one Employee
-      TimesheetEntry.belongsTo(models.Employee, {
-        foreignKey: 'employee_id',
-        as: 'employee'
-      });
-      // An entry belongs to one Timesheet
-      TimesheetEntry.belongsTo(models.Timesheet, {
-        foreignKey: 'timesheetId',
-        as: 'timesheet'
-      });
-    }
-  }
-  TimesheetEntry.init({
+  const TimesheetEntry = sequelize.define('TimesheetEntry', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -26,7 +10,7 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'employees', // table name
+        model: 'employees',
         key: 'id'
       }
     },
@@ -41,20 +25,30 @@ module.exports = (sequelize, DataTypes) => {
     clockInTime: {
       type: DataTypes.DATE,
       allowNull: false,
-      field: 'clock_in_time' // Ensure snake_case in DB
+      field: 'clock_in_time'
     },
     clockOutTime: {
       type: DataTypes.DATE,
-      allowNull: true, // Might be null if currently clocked in
+      allowNull: true,
       field: 'clock_out_time'
-    },
-    // Optional: Add fields like 'break_duration' if needed
+    }
   }, {
-    sequelize,
     modelName: 'TimesheetEntry',
     tableName: 'timesheet_entries',
-    timestamps: true, // Use Sequelize timestamps (createdAt, updatedAt)
-    underscored: true // Use snake_case for automatic fields (createdAt -> created_at)
+    timestamps: true,
+    underscored: true
   });
+
+  TimesheetEntry.associate = (models) => {
+    TimesheetEntry.belongsTo(models.Employee, {
+      foreignKey: 'employee_id',
+      as: 'employee'
+    });
+    TimesheetEntry.belongsTo(models.Timesheet, {
+      foreignKey: 'timesheetId',
+      as: 'timesheet'
+    });
+  };
+
   return TimesheetEntry;
 }; 

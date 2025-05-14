@@ -1,13 +1,5 @@
-const { Model } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
-  class Workday extends Model {
-    static associate(models) {
-      Workday.belongsTo(models.Employee, { foreignKey: 'employee_id', as: 'employee' });
-      Workday.belongsTo(models.Timesheet, { foreignKey: 'timesheet_id', as: 'timesheet' });
-    }
-  }
-  Workday.init({
+  const Workday = sequelize.define('Workday', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -48,10 +40,15 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'SET NULL' // Matches schema definition
     }
   }, {
-    sequelize,
     modelName: 'Workday',
     tableName: 'workdays',
     timestamps: false
   });
+
+  Workday.associate = (models) => {
+    Workday.belongsTo(models.Employee, { foreignKey: 'employee_id', as: 'employee' });
+    Workday.belongsTo(models.Timesheet, { foreignKey: 'timesheet_id', as: 'timesheet' });
+  };
+
   return Workday;
 }; 

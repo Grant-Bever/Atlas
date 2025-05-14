@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import Modal from '../components/Modal'; // Assuming a reusable Modal component exists
 import '../styles/Inventory.css';
@@ -12,7 +12,7 @@ import { API_BASE_URL } from '../utils/config';
 const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 function ManagerInventory() {
-    const navigate = useNavigate();
+    const history = useHistory();
     const [inventory, setInventory] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -96,7 +96,7 @@ function ManagerInventory() {
         e.stopPropagation();
         setOpenItemMenuId(null);
         console.log(`Navigate to edit item: ${itemId}`);
-        navigate(`/inventory/edit/${itemId}`);
+        history.push(`/inventory/edit/${itemId}`);
     };
 
     const openAddQuantityModal = (e, item) => {

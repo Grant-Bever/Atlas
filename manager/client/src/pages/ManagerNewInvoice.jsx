@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import { FaPlus, FaTrashAlt } from 'react-icons/fa';
 import '../styles/InvoiceForm.css';
@@ -14,7 +14,7 @@ const getFormattedDate = (date = new Date()) => {
 };
 
 function ManagerNewInvoice() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { orderId } = useParams(); // orderId will be undefined when creating new
   const isEditing = Boolean(orderId);
 
@@ -189,7 +189,7 @@ function ManagerNewInvoice() {
             }
             responseData = await response.json();
             setSuccessMessage(`Invoice #${responseData.id} updated successfully!`);
-            setTimeout(() => navigate('/orders'), 2000); // Redirect after update
+            setTimeout(() => history.push('/orders'), 2000); // Changed navigate
 
         } else {
             // --- Prepare Create Payload ---
@@ -222,7 +222,7 @@ function ManagerNewInvoice() {
             responseData = await response.json();
             setSuccessMessage(`Invoice #${responseData.id} created successfully!`);
             setInvoiceNumber(responseData.id);
-            setTimeout(() => navigate('/orders'), 2000);
+            setTimeout(() => history.push('/orders'), 2000); // Changed navigate
         }
 
     } catch (err) {
@@ -234,7 +234,7 @@ function ManagerNewInvoice() {
   };
 
   const handleCancel = () => {
-    navigate('/orders');
+    history.push('/orders'); // Changed navigate
   };
 
   // --- Render Logic --- 

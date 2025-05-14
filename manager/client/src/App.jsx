@@ -1,9 +1,9 @@
 import React from 'react';
 import {
   BrowserRouter as Router,
-  Routes,
+  Switch,  // Changed from Routes
   Route,
-  Navigate // To redirect the base path
+  Redirect // Changed from Navigate
 } from 'react-router-dom';
 
 // Import Manager Pages
@@ -26,33 +26,35 @@ import ManagerSignUpPage from './pages/ManagerSignUpPage'; // Import SignUpPage
 function App() {
   return (
     <Router>
-      <Routes>
+      <Switch> {/* Changed from Routes */}
         {/* Set login page as the root path */}
-        <Route path="/" element={<ManagerLoginPage />} />
-        <Route path="/signup" element={<ManagerSignUpPage />} />
+        <Route exact path="/" component={ManagerLoginPage} /> {/* Changed element to component and added exact */}
+        <Route exact path="/signup" component={ManagerSignUpPage} /> {/* Changed element to component and added exact */}
         
         {/* Manager Routes - Assuming these are protected and accessible after login */}
-        <Route path="/orders" element={<ManagerActiveOrders />} />
-        <Route path="/orders/new" element={<ManagerNewInvoice />} />
-        <Route path="/orders/edit/:orderId" element={<ManagerNewInvoice />} />
-        <Route path="/orders/completed" element={<ManagerCompletedOrders />} />
-        <Route path="/totals" element={<ManagerTotals />} />
-        <Route path="/employees" element={<ManagerEmployees />} />
-        <Route path="/employees/add" element={<AddEmployee />} />
-        <Route path="/employees/edit/:employeeId" element={<AddEmployee />} />
-        <Route path="/inventory" element={<ManagerInventory />} />
-        <Route path="/inventory/add" element={<AddInventoryItem />} />
-        <Route path="/inventory/edit/:itemId" element={<AddInventoryItem />} />
+        <Route exact path="/orders" component={ManagerActiveOrders} /> {/* Changed element to component and added exact */}
+        <Route exact path="/orders/new" component={ManagerNewInvoice} /> {/* Changed element to component and added exact */}
+        <Route exact path="/orders/edit/:orderId" component={ManagerNewInvoice} /> {/* Changed element to component and added exact */}
+        <Route exact path="/orders/completed" component={ManagerCompletedOrders} /> {/* Changed element to component and added exact */}
+        <Route exact path="/totals" component={ManagerTotals} /> {/* Changed element to component and added exact */}
+        <Route exact path="/employees" component={ManagerEmployees} /> {/* Changed element to component and added exact */}
+        <Route exact path="/employees/add" component={AddEmployee} /> {/* Changed element to component and added exact */}
+        <Route exact path="/employees/edit/:employeeId" component={AddEmployee} /> {/* Changed element to component and added exact */}
+        <Route exact path="/inventory" component={ManagerInventory} /> {/* Changed element to component and added exact */}
+        <Route exact path="/inventory/add" component={AddInventoryItem} /> {/* Changed element to component and added exact */}
+        <Route exact path="/inventory/edit/:itemId" component={AddInventoryItem} /> {/* Changed element to component and added exact */}
         {/* Add routes for Customers and Settings when components are ready
-        <Route path="/customers" element={<ManagerCustomers />} />
-        <Route path="/settings" element={<ManagerSettings />} />
+        <Route exact path="/customers" component={ManagerCustomers} />
+        <Route exact path="/settings" component={ManagerSettings} />
         */}
 
         {/* TODO: Add routes for Employee and Customer roles later */}
 
-        {/* Optional: Add a 404 Not Found Route */}
-        {/* <Route path="*" element={<div>404 Not Found</div>} /> */}
-      </Routes>
+        {/* Optional: Add a 404 Not Found Route - In v5, a Redirect can be used at the end of a Switch for no match */}
+        {/* <Route path="*"><div>404 Not Found</div></Route> is one way or <Redirect to="/" /> for example */}
+        {/* For a generic 404, you can add a Route without a path at the end of the Switch: */}
+        {/* <Route render={() => <div>404 Not Found</div>} /> */}
+      </Switch>
     </Router>
   );
 }

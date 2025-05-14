@@ -1,14 +1,7 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class InvoiceItem extends Model {
-    static associate(models) {
-      InvoiceItem.belongsTo(models.Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
-      // If this item refers to an Inventory item, define the association:
-      // InvoiceItem.belongsTo(models.Inventory, { foreignKey: 'inventory_id', as: 'inventoryItem' });
-    }
-  }
-  InvoiceItem.init({
+  const InvoiceItem = sequelize.define('InvoiceItem', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -57,10 +50,16 @@ module.exports = (sequelize, DataTypes) => {
       onDelete: 'CASCADE' // Matches schema definition
     }
   }, {
-    sequelize,
     modelName: 'InvoiceItem',
     tableName: 'invoice_items',
     timestamps: false
   });
+
+  InvoiceItem.associate = (models) => {
+    InvoiceItem.belongsTo(models.Invoice, { foreignKey: 'invoice_id', as: 'invoice' });
+    // If this item refers to an Inventory item, define the association:
+    // InvoiceItem.belongsTo(models.Inventory, { foreignKey: 'inventory_id', as: 'inventoryItem' });
+  };
+
   return InvoiceItem;
 }; 

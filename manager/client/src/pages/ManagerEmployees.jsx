@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
+import { Link, useHistory } from 'react-router-dom'; // Changed useNavigate to useHistory
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Employees.css'; // Create this CSS file
 import '../styles/Table.css'; // Reusing action menu styles from Table.css
@@ -60,7 +60,7 @@ const sampleEmployees = [
 const daysOfWeek = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 
 function ManagerEmployees() {
-  const navigate = useNavigate();
+  const history = useHistory(); // Changed navigate to history
   const [employeesTimesheets, setEmployeesTimesheets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -139,7 +139,7 @@ function ManagerEmployees() {
     setOpenEmployeeMenuId(null);
     // TODO: Implement edit employee functionality if needed
     console.log(`Navigate to edit page for employee ${employeeId}`);
-    // navigate(`/employees/edit/${employeeId}`); // Uncomment when edit page exists
+    // history.push(`/employees/edit/${employeeId}`); // Changed navigate to history.push (still commented)
   };
 
   const handleFireClick = (e, employeeId, employeeName) => {
