@@ -1,10 +1,12 @@
-import React from 'react';
-import { useHistory } from 'react-router-dom';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import LoginView from '../components/LoginView';
 import { useAuth } from '../contexts/AuthContext';
 
 const EmployeeLoginPage = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
+  const { login } = useAuth();
+  const [loginError, setLoginError] = useState(null);
 
   const handleLoginSubmit = async (email, password) => {
     setLoginError(null);
@@ -17,24 +19,18 @@ const EmployeeLoginPage = () => {
         navigate('/employee/timesheet');
         return true;
       } else {
-        // The login function will have set the error in the AuthContext
-        setLoginError(error || 'Login failed. Please check your credentials.');
+        setLoginError('Login failed. Please check your credentials or contact support.');
         return false;
       }
-
-      console.log('Employee Login successful:', data);
-      history.push('/employee/timesheet');
-      return true;
-
-    } catch (error) {
-      console.error('Login request error:', error);
-      alert('An error occurred during login. Please try again.');
+    } catch (err) {
+      console.error('Login request error:', err);
+      setLoginError(err.message || 'An error occurred during login. Please try again.');
       return false;
     }
   };
 
   const handleSignUpClick = () => {
-    history.push('/signup');
+    navigate('/signup');
   };
 
   return (
