@@ -44,7 +44,7 @@ const createInvoice = async (invoiceData) => {
         // Provide a placeholder email or use the one from invoiceData if available
         // Customer model requires email, and it must be unique.
         email: placeholderEmail, 
-        password_hash: null // Assuming customers created via invoice don't have a password initially
+        password_hash: '__TEMP_PASS_FOR_INVOICE_CUSTOMER__' // Changed from null to a placeholder string
       },
       transaction
     });
