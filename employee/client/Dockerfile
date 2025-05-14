@@ -7,14 +7,14 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 
 # Install dependencies
-RUN npm ci
+RUN npm ci --legacy-peer-deps
 
 # Copy the rest of the application source code
 COPY . .
 
 # Build the application for production
 # Ensure your package.json has a "build" script
-RUN npm run build
+RUN NODE_OPTIONS=--openssl-legacy-provider npm run build
 
 # Stage 2: Serve the static files with Nginx
 FROM nginx:1.25-alpine
