@@ -5,6 +5,8 @@ import EmployeeInventory from './components/employee/EmployeeInventory';
 import Timesheet from './components/employee/Timesheet';
 import EmployeeLoginPage from './pages/EmployeeLoginPage';
 import EmployeeSignUpPage from './pages/EmployeeSignUpPage';
+import PaymentPage from './pages/PaymentPage';
+import StripeTest from './pages/StripeTest';
 
 function App() {
   return (
@@ -13,9 +15,7 @@ function App() {
         <Route path="/" element={<Navigate to="/login" replace />} />
         <Route path="/login" element={<EmployeeLoginPage />} />
         <Route path="/signup" element={<EmployeeSignUpPage />} />
-      <Switch>
-        <Route exact path="/" component={EmployeeLoginPage} />
-        <Route exact path="/signup" component={EmployeeSignUpPage} />
+
         
         {/* Employee routes - protected by authentication in EmployeeLayout */}
         <Route path="/employee" element={<EmployeeLayout />}>

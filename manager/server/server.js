@@ -13,6 +13,7 @@ const inventoryRoutes = require('./routes/inventoryRoutes'); // <-- Import inven
 const customerRoutes = require('./routes/customerRoutes');
 const employeeSelfServiceRoutes = require('./routes/employeeSelfServiceRoutes'); // <-- IMPORT NEW ROUTES
 const authRoutes = require('./routes/authRoutes'); // Import new auth routes
+const paymentRoutes = require('./routes/paymentRoutes'); // Import payment routes for Stripe
 // Add other route imports here as you create them (e.g., inventoryRoutes)
 
 const app = express();
@@ -20,32 +21,15 @@ const app = express();
 // Trust the first proxy hop (common for Cloud Run/Load Balancers)
 app.set('trust proxy', 1); 
 
-// Define allowed origins
-const allowedOrigins = [
-  'https://manager-client-671804272646.us-east1.run.app',
-  'https://customer-client-671804272646.us-east1.run.app',
-  'https://employee-client-671804272646.us-east1.run.app'
-];
-
-// In development, also allow localhost
-if (process.env.NODE_ENV !== 'production') {
-  allowedOrigins.push('http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002');
-}
-
-// CORS configuration
+// Super simple CORS setup - allow all origins
 app.use(cors({
-  origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
-      return callback(new Error(msg), false);
-    }
-    return callback(null, true);
-  },
-  credentials: true // Allow cookies
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
+
+// Serve static files from 'public' directory
+app.use(express.static('public'));
 
 app.use(express.json()); // Parse incoming request bodies in JSON format
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
@@ -91,6 +75,7 @@ app.use('/api/inventory', inventoryRoutes); // <-- Mount inventory routes
 app.use('/api/customer', customerRoutes);
 app.use('/api/employee-self-service', employeeSelfServiceRoutes); // <-- MOUNT NEW ROUTES
 app.use('/api/auth', authRoutes); // Mount new auth routes
+app.use('/api', paymentRoutes); // Mount payment routes for Stripe
 // app.use('/api/inventory', inventoryRoutes); // Example for other routes
 // Add other routes here...
 

@@ -3,12 +3,15 @@ import ReactDOM from 'react-dom/client';
 import './index.css'; // Assuming you might have or want global styles
 import App from './App'; // Import your main App component
 import { AuthProvider } from './contexts/AuthContext'; // Import the AuthProvider
+import StripeProvider from './contexts/StripeContext'; // Import the StripeProvider
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
     <AuthProvider> { /* Wrap App with AuthProvider */ }
-      <App />
+      <StripeProvider>
+        <App />
+      </StripeProvider>
     </AuthProvider>
   </React.StrictMode>
 );
