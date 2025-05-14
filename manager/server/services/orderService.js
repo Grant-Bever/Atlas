@@ -10,6 +10,7 @@ const { encryptData } = require('../utils/securityUtils'); // Added import
  * @returns {Promise<object>} The created invoice object with items.
  */
 const createInvoice = async (invoiceData) => {
+  console.log('<<<<< RUNNING orderService.createInvoice - VERSION 2 (with encrypted_phone_number) >>>>>');
   // Destructure customerName and customerPhone
   const { customerName, customerPhone, date, total, checked_out = false, paid = false, completed = false, items = [], customerEmail } = invoiceData; // Added customerEmail
 
