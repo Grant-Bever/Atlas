@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Redirect } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import TimeTracking from './TimeTracking';
 import './EmployeeLayout.css';
@@ -44,10 +44,10 @@ const EmployeeLayout = (props) => {
         setProfileLoading(false);
         setEmployeeProfile(null);
     }
-  }, [user, isAuthenticated]);
+  }, [user, isAuthenticated, timesheetKey]);
 
-  if (!isAuthenticated || (isAuthenticated && user?.role !== 'employee')) {
-    return <Redirect to="/login" />;
+  if (!profileLoading && (!isAuthenticated || (isAuthenticated && user?.role !== 'employee'))) {
+    return <Navigate to="/login" replace />;
   }
 
   const handleClockAction = () => {
@@ -58,25 +58,14 @@ const EmployeeLayout = (props) => {
     return <div>Loading employee information...</div>; 
   }
 
-  if (profileError) {
+  if (!profileLoading && profileError) {
     return <div className="error-message" style={{padding: '20px'}}>Error loading employee data: {profileError}</div>;
   }
 
-  if (!employeeProfile || typeof employeeProfile.hourly_rate === 'undefined') {
+  if (!profileLoading && (!employeeProfile || typeof employeeProfile.hourly_rate === 'undefined')) {
     console.warn('EmployeeLayout: Employee profile loaded but hourly_rate is still missing.');
     return <div>Employee data is incomplete (missing hourly rate). Please contact support.</div>;
   }
-
-  const childrenWithProps = React.Children.map(props.children, child => {
-    if (React.isValidElement(child)) {
-      return React.cloneElement(child, { 
-        employeeId: employeeProfile.id, 
-        hourlyRate: employeeProfile.hourly_rate, 
-        needsRefresh: timesheetKey 
-      });
-    }
-    return child;
-  });
 
   return (
     <div className="employee-layout">
@@ -91,7 +80,7 @@ const EmployeeLayout = (props) => {
         />
       </nav>
       <main className="employee-content">
-         {childrenWithProps}
+         <Outlet context={{ employeeId: employeeProfile?.id, hourlyRate: employeeProfile?.hourly_rate, needsRefresh: timesheetKey }} />
       </main>
     </div>
   );
