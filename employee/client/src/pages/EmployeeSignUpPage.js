@@ -1,10 +1,10 @@
 import React from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import SignUpView from '../components/SignUpView';
 import { API_BASE_URL } from '../utils/config';
 
 const EmployeeSignUpPage = () => {
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleSignUpSubmit = async (formData) => {
     try {
@@ -29,8 +29,6 @@ const EmployeeSignUpPage = () => {
       }
 
       alert('Employee account created successfully! Please log in.');
-      history.push('/');
-      alert('Account created successfully! Please login.');
       navigate('/login');
       return true;
 
