@@ -4,6 +4,20 @@ const authController = require('../controllers/authController');
 const jwt = require('jsonwebtoken');
 const { Manager, Employee, Customer } = require('../models');
 
+// Add CORS headers directly to auth routes
+router.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(204).end();
+  }
+  
+  next();
+});
+
 // POST /api/auth/manager/signup
 router.post('/manager/signup', authController.managerSignUp);
 

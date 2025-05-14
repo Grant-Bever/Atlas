@@ -1,2 +1,3 @@
 // API Configuration
-export const API_BASE_URL = 'https://manager-server-671804272646.us-east1.run.app'; 
+// Always use localhost for development
+export const API_BASE_URL = 'http://localhost:3002'; 
