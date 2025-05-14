@@ -1,7 +1,7 @@
 const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
 
 module.exports = (sequelize, DataTypes) => {
-  class Manager extends Model {
+  class Manager extends sequelize.Model {
     /**
      * Helper method for defining associations.
      * This method is not a part of Sequelize lifecycle.
@@ -55,6 +55,7 @@ module.exports = (sequelize, DataTypes) => {
       defaultValue: DataTypes.NOW
     }
   }, {
+    sequelize,
     modelName: 'Manager',
     tableName: 'managers', // Explicitly set table name to lowercase plural
     timestamps: true, // Enabled timestamps
