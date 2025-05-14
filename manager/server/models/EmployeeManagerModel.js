@@ -1,26 +1,7 @@
-const { Model } = require('sequelize');
-const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
+const bcrypt = require('bcrypt');
 
 module.exports = (sequelize, DataTypes) => {
-  class Employee extends Model {
-    static associate(models) {
-      Employee.hasMany(models.Workday, { foreignKey: 'employee_id', as: 'workdays' });
-      Employee.hasMany(models.TimesheetEntry, {
-        foreignKey: 'employee_id',
-        as: 'timesheetEntries'
-      });
-      Employee.hasMany(models.WeeklyTimesheetStatus, {
-        foreignKey: 'employee_id',
-        as: 'weeklyStatuses'
-      });
-    }
-
-    // Instance method to validate password
-    async validatePassword(password) {
-      return bcrypt.compare(password, this.password_hash);
-    }
-  }
-  Employee.init({
+  const Employee = sequelize.define('Employee', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -35,22 +16,22 @@ module.exports = (sequelize, DataTypes) => {
         isEmail: true
       }
     },
-    encrypted_phone_number: { // Renamed
+    encrypted_phone_number: {
       type: DataTypes.STRING(255),
       allowNull: true
     },
-    name: { // Assuming 'name' is sufficient; could be split into first_name, last_name
+    name: {
       type: DataTypes.STRING(255),
       allowNull: false
     },
-    password_hash: { // Renamed
+    password_hash: {
       type: DataTypes.STRING(255),
-      allowNull: false // Reverted to NOT NULL
+      allowNull: true
     },
     hourly_rate: {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
-      defaultValue: 15.00 // Added default value
+      defaultValue: 15.00
     },
     is_active: {
       type: DataTypes.BOOLEAN,
@@ -62,12 +43,21 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DATE,
       allowNull: true,
       field: 'fired_at'
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW
     }
   }, {
-    sequelize,
     modelName: 'Employee',
     tableName: 'employees',
-    timestamps: true, // Enabled timestamps
+    timestamps: true,
     hooks: {
       beforeCreate: async (employee) => {
         if (employee.password_hash) {
@@ -83,5 +73,22 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
+
+  Employee.prototype.validatePassword = async function(password) {
+    return bcrypt.compare(password, this.password_hash);
+  };
+
+  Employee.associate = (models) => {
+    Employee.hasMany(models.Workday, { foreignKey: 'employee_id', as: 'workdays' });
+    Employee.hasMany(models.TimesheetEntry, {
+      foreignKey: 'employee_id',
+      as: 'timesheetEntries'
+    });
+    Employee.hasMany(models.WeeklyTimesheetStatus, {
+      foreignKey: 'employee_id',
+      as: 'weeklyStatuses'
+    });
+  };
+
   return Employee;
 }; 

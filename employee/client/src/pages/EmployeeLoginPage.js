@@ -1,17 +1,10 @@
-import React, { useState } from 'react';
-import { useNavigate, Navigate } from 'react-router-dom';
+import React from 'react';
+import { useHistory } from 'react-router-dom';
 import LoginView from '../components/LoginView';
 import { useAuth } from '../contexts/AuthContext';
 
 const EmployeeLoginPage = () => {
-  const navigate = useNavigate();
-  const { login, isAuthenticated, error } = useAuth();
-  const [loginError, setLoginError] = useState(null);
-
-  // If already authenticated, redirect to the timesheet page
-  if (isAuthenticated) {
-    return <Navigate to="/employee/timesheet" replace />;
-  }
+  const history = useHistory();
 
   const handleLoginSubmit = async (email, password) => {
     setLoginError(null);
@@ -28,15 +21,20 @@ const EmployeeLoginPage = () => {
         setLoginError(error || 'Login failed. Please check your credentials.');
         return false;
       }
-    } catch (err) {
-      console.error('Login request error:', err);
-      setLoginError('An error occurred during login. Please try again.');
+
+      console.log('Employee Login successful:', data);
+      history.push('/employee/timesheet');
+      return true;
+
+    } catch (error) {
+      console.error('Login request error:', error);
+      alert('An error occurred during login. Please try again.');
       return false;
     }
   };
 
   const handleSignUpClick = () => {
-    navigate('/signup');
+    history.push('/signup');
   };
 
   return (

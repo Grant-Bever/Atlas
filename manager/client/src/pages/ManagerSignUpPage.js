@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import SignUpView from '../components/SignUpView';
 import { API_BASE_URL } from '../utils/config';
 
 const ManagerSignUpPage = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleSignUpSubmit = async (formData) => {
     try {
@@ -29,7 +29,7 @@ const ManagerSignUpPage = () => {
       }
 
       alert('Manager account created successfully! Please log in.');
-      navigate('/'); // Navigate to manager login page
+      history.push('/');
 
     } catch (error) {
       console.error('Sign up request error:', error);

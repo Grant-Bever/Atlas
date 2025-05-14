@@ -1,25 +1,7 @@
-const { Model } = require('sequelize');
 const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
 
 module.exports = (sequelize, DataTypes) => {
-  class Manager extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
-      Manager.hasMany(models.Timesheet, { foreignKey: 'manager_id', as: 'timesheets' });
-      Manager.hasMany(models.Inventory, { foreignKey: 'manager_id', as: 'inventoryItems' });
-    }
-
-    // Instance method to validate password
-    async validatePassword(password) {
-      return bcrypt.compare(password, this.password_hash);
-    }
-  }
-  Manager.init({
+  const Manager = sequelize.define('Manager', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -44,10 +26,19 @@ module.exports = (sequelize, DataTypes) => {
     },
     password_hash: { // Renamed from password
       type: DataTypes.STRING(255),
-      allowNull: false // Reverted to NOT NULL
+      allowNull: true // CHANGED from false // Reverted to NOT NULL
+    },
+    createdAt: { // ADDED
+      type: DataTypes.DATE,
+      allowNull: true, // Temporarily true
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: { // ADDED
+      type: DataTypes.DATE,
+      allowNull: true, // Temporarily true
+      defaultValue: DataTypes.NOW
     }
   }, {
-    sequelize,
     modelName: 'Manager',
     tableName: 'managers', // Explicitly set table name to lowercase plural
     timestamps: true, // Enabled timestamps
@@ -66,5 +57,18 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
+
+  // ADDED instance method
+  Manager.prototype.validatePassword = async function(password) {
+    return bcrypt.compare(password, this.password_hash);
+  };
+
+  // ADDED association method
+  Manager.associate = (models) => {
+    // define association here
+    Manager.hasMany(models.Timesheet, { foreignKey: 'manager_id', as: 'timesheets' });
+    Manager.hasMany(models.Inventory, { foreignKey: 'manager_id', as: 'inventoryItems' });
+  };
+
   return Manager;
 }; 

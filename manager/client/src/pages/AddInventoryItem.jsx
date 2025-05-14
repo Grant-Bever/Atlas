@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/FormPage.css'; // Shared form styles
 import { API_BASE_URL } from '../utils/config';
@@ -19,7 +19,7 @@ const fetchCategories = () => {
 const ADD_NEW_CATEGORY_VALUE = '__add_new__';
 
 function AddInventoryItem() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { itemId } = useParams();
   const isEditing = Boolean(itemId);
 
@@ -169,7 +169,7 @@ function AddInventoryItem() {
             }
 
             console.log(successMessage);
-            navigate('/inventory'); // Navigate back only on success
+            history.push('/inventory'); // Changed navigate
 
         } catch (err) {
             console.error(`Error ${isEditing ? 'updating' : 'saving'} item:`, err);
@@ -183,7 +183,7 @@ function AddInventoryItem() {
   };
 
   const handleCancel = () => {
-    navigate('/inventory');
+    history.push('/inventory'); // Changed navigate
   };
 
   // --- Render Logic ---

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Keep for potential future modals
@@ -10,7 +10,7 @@ import { API_BASE_URL } from '../utils/config';
 const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 function ManagerCompletedOrders() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const [completedOrders, setCompletedOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);

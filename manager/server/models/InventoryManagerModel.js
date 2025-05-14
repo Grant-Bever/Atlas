@@ -1,14 +1,5 @@
-const { Model } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
-  class Inventory extends Model {
-    static associate(models) {
-      Inventory.belongsTo(models.Manager, { foreignKey: 'manager_id', as: 'manager' });
-      // If Invoice_Items refers to Inventory items directly, add association here
-      // Inventory.hasMany(models.InvoiceItem, { foreignKey: 'inventory_id', as: 'invoiceLineItems' });
-    }
-  }
-  Inventory.init({
+  const Inventory = sequelize.define('Inventory', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -38,13 +29,19 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       },
       onUpdate: 'CASCADE',
-      onDelete: 'SET NULL' // Matches schema definition
+      onDelete: 'SET NULL'
     }
   }, {
-    sequelize,
     modelName: 'Inventory',
     tableName: 'inventory',
     timestamps: false
   });
+
+  Inventory.associate = (models) => {
+    Inventory.belongsTo(models.Manager, { foreignKey: 'manager_id', as: 'manager' });
+    // If Invoice_Items refers to Inventory items directly, add association here
+    // Inventory.hasMany(models.InvoiceItem, { foreignKey: 'inventory_id', as: 'invoiceLineItems' });
+  };
+
   return Inventory;
 }; 

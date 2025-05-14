@@ -1,13 +1,7 @@
 const { Model } = require('sequelize');
 
 module.exports = (sequelize, DataTypes) => {
-  class Invoice extends Model {
-    static associate(models) {
-      Invoice.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
-      Invoice.hasMany(models.InvoiceItem, { foreignKey: 'invoice_id', as: 'items' });
-    }
-  }
-  Invoice.init({
+  const Invoice = sequelize.define('Invoice', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -42,13 +36,18 @@ module.exports = (sequelize, DataTypes) => {
         key: 'id'
       },
       onUpdate: 'CASCADE',
-      onDelete: 'CASCADE' // Matches schema definition
+      onDelete: 'CASCADE'
     }
   }, {
-    sequelize,
     modelName: 'Invoice',
     tableName: 'invoices',
     timestamps: false
   });
+
+  Invoice.associate = (models) => {
+    Invoice.belongsTo(models.Customer, { foreignKey: 'customer_id', as: 'customer' });
+    Invoice.hasMany(models.InvoiceItem, { foreignKey: 'invoice_id', as: 'items' });
+  };
+
   return Invoice;
 }; 

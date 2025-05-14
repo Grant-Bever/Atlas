@@ -1,16 +1,5 @@
-const { Model } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
-  class WeeklyTimesheetStatus extends Model {
-    static associate(models) {
-      // A status record belongs to one Employee
-      WeeklyTimesheetStatus.belongsTo(models.Employee, {
-        foreignKey: 'employeeId',
-        as: 'employee'
-      });
-    }
-  }
-  WeeklyTimesheetStatus.init({
+  const WeeklyTimesheetStatus = sequelize.define('WeeklyTimesheetStatus', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
@@ -35,15 +24,12 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.ENUM('Pending', 'Approved', 'Denied'),
       allowNull: false,
       defaultValue: 'Pending'
-    },
-    // Optional: Add fields like approver_id, approval_timestamp etc.
+    }
   }, {
-    sequelize,
     modelName: 'WeeklyTimesheetStatus',
     tableName: 'weekly_timesheet_statuses',
-    timestamps: true, // Use Sequelize timestamps (createdAt, updatedAt)
-    underscored: true, // Use snake_case for automatic fields
-    // Add a unique constraint to ensure only one status per employee per week start date
+    timestamps: true,
+    underscored: true,
     indexes: [
       {
         unique: true,
@@ -51,5 +37,13 @@ module.exports = (sequelize, DataTypes) => {
       }
     ]
   });
+
+  WeeklyTimesheetStatus.associate = (models) => {
+    WeeklyTimesheetStatus.belongsTo(models.Employee, {
+      foreignKey: 'employeeId',
+      as: 'employee'
+    });
+  };
+
   return WeeklyTimesheetStatus;
 }; 

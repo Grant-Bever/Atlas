@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useHistory } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/Table.css'; // Shared table styles
 import '../styles/Modal.css'; // Import Modal styles
@@ -10,7 +10,7 @@ import { API_BASE_URL } from '../utils/config';
 const API_ENDPOINT = `${API_BASE_URL}/api`;
 
 function ManagerActiveOrders() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const [orders, setOrders] = useState([]); // Initialize with empty array
   const [loading, setLoading] = useState(true); // Add loading state
   const [error, setError] = useState(null); // Add error state
@@ -108,7 +108,7 @@ function ManagerActiveOrders() {
     e.stopPropagation();
     setOpenMenuId(null); // Close menu
     console.log(`Navigating to edit order: ${orderId}`);
-    navigate(`/orders/edit/${orderId}`); // Navigate to the edit route
+    history.push(`/orders/edit/${orderId}`);
   };
 
   const handleDeleteClick = (e, orderId) => {
