@@ -67,8 +67,8 @@ const calculateHours = (clockIn, clockOut) => {
  */
 const getWeeklyTimesheets = async (managerId) => {
     const { startDate, endDate, weekStartDateOnly } = getCurrentWeekDates();
-    console.log('DEBUG: Manager View Query Parameters:', {
-        managerIdProvided: managerId,
+    console.log('DEBUG: Manager View Query Parameters (ALL TIMESHEETS MODE):', {
+        requestingManagerId: managerId, // Log who is asking, but will not filter by it
         weekStartDateOnly,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
@@ -76,29 +76,30 @@ const getWeeklyTimesheets = async (managerId) => {
     });
 
     try {
-        // Construct the base query for timesheet records
+        // Construct the base query for timesheet records for the current week for ALL employees
         const timesheetQueryOptions = {
             where: {
                 date: {
                     [Op.between]: [weekStartDateOnly, moment(endDate).format('YYYY-MM-DD')]
                 }
+                // No longer filtering by manager_id here
             },
             include: [
-                { model: Employee, as: 'employee', attributes: ['id', 'name', 'hourly_rate', 'email', 'is_active'] }, // Include employee details
-                // No need to include Manager here as we filter by manager_id if provided
+                { 
+                    model: Employee, 
+                    as: 'employee', 
+                    attributes: ['id', 'name', 'hourly_rate', 'email', 'is_active', 'managerId'],
+                    // Optionally, if you still want to know who the employee's assigned manager is:
+                    // include: [{ model: db.Manager, as: 'manager', attributes: ['id', 'name'] }]
+                }
             ]
         };
 
-        if (managerId) {
-            console.log(`DEBUG: Filtering timesheets for manager_id: ${managerId}`);
-            timesheetQueryOptions.where.manager_id = managerId;
-        } else {
-            console.log('DEBUG: managerId not provided, fetching timesheets without manager_id filter (current behavior may need review for non-manager context).');
-            // If no managerId, the original behavior was to fetch all. 
-            // Consider if this service should ONLY be for managers or if it needs to handle both cases explicitly.
-        }
+        // The block that added manager_id to the query is now removed.
+        // console.log(`DEBUG: Filtering timesheets for manager_id: ${managerId}`);
+        // timesheetQueryOptions.where.manager_id = managerId; 
 
-        // Get all relevant timesheet records for the week, potentially filtered by manager_id
+        // Get all relevant timesheet records for the week
         const timesheetRecords = await Timesheet.findAll(timesheetQueryOptions);
 
         console.log(`DEBUG: Found ${timesheetRecords.length} timesheet records for the week (managerId: ${managerId})`);
