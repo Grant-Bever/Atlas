@@ -24,6 +24,8 @@ module.exports = (sequelize, DataTypes) => {
   });
 
   ClockEvent.associate = (models) => {
+    // const EmployeeModel = require('./EmployeeManagerModel')(sequelize, DataTypes); // DIAGNOSTIC
+    // ClockEvent.belongsTo(EmployeeModel, { // DIAGNOSTIC
     ClockEvent.belongsTo(models.Employee, {
       foreignKey: 'employeeId',
       as: 'employee'

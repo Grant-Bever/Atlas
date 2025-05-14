@@ -1,6 +1,8 @@
-require('dotenv').config(); // Load environment variables first
+const path = require('path'); // Moved up
+require('dotenv').config({ path: path.resolve(__dirname, '../../.env') }); // Load environment variables first
 const express = require('express');
 const cors = require('cors');
+// const path = require('path'); // Original position, now removed as it's moved up
 const db = require('./models'); // Imports models/index.js - initializes Sequelize
 
 // Import routes
@@ -31,6 +33,39 @@ app.use(express.static('public'));
 
 app.use(express.json()); // Parse incoming request bodies in JSON format
 app.use(express.urlencoded({ extended: true })); // Parse URL-encoded bodies
+
+// Verify environment variables for database connection (moved down, after dotenv config)
+const { DB_NAME, DB_USER, DB_PASS, DB_HOST, NODE_ENV } = process.env;
+
+if (!DB_NAME || !DB_USER || !DB_HOST) { // Removed DB_PASS from this direct check for a moment
+    console.error("CRITICAL: Database configuration environment variables (DB_NAME, DB_USER, DB_HOST) must all be set.");
+    // process.exit(1); // Potentially re-enable exit later
+}
+console.log(`DB_NAME: ${DB_NAME}`);
+console.log(`DB_USER: ${DB_USER}`);
+// console.log(`DB_PASS is set: ${!!DB_PASS}`); // Original check for DB_PASS
+console.log(`DB_PASS from env is set: ${!!process.env.DB_PASS}`); // More direct check post-config
+console.log(`DB_HOST (socket path): ${DB_HOST}`);
+console.log(`NODE_ENV: ${NODE_ENV}`);
+
+// Test DB connection
+db.sequelize.authenticate()
+    .then(() => {
+        console.log('Database connection has been established successfully.');
+        // Sync models (optional, based on your setup)
+        // return db.sequelize.sync(); // Example: { force: true } for development to drop/recreate
+        return db.sequelize.sync({ alter: true }); // Safely alter tables
+    })
+    .then(() => {
+        console.log("All models were synchronized successfully.");
+    })
+    .catch(err => {
+        console.error('Unable to connect to the database or sync models:', err);
+        if (!DB_PASS) {
+            console.error("DB_PASS is missing from environment variables. Please check your .env file and dotenv configuration.");
+        }
+        // process.exit(1); // Consider exiting if DB connection is critical for startup
+    });
 
 // --- Mount Routes ---
 app.use('/api/orders', orderRoutes);

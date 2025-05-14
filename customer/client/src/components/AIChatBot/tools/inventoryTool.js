@@ -1,0 +1,1 @@
+// Custom LangChain tool for inventory checking will go here 

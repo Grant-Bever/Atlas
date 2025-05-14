@@ -37,6 +37,7 @@ exports.managerSignUp = async (req, res) => {
       email,
       password_hash: password, // The model hook will hash this
       encrypted_phone_number: encryptedPhoneNumber,
+      role: 'manager' // Ensure new managers are created with the manager role
     };
 
     const newManager = await managerAuthService.createManager(managerData);

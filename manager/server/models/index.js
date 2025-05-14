@@ -27,6 +27,11 @@ fs.readdirSync(__dirname)
 // Set up associations between models
 Object.keys(db).forEach(modelName => {
   if (db[modelName].associate) {
+    // **Defensive check for debugging this specific issue:**
+    if (modelName === 'ClockEvent' && !db.Employee) {
+      console.error("DIAGNOSTIC: Attempting to associate ClockEvent but db.Employee is not defined at this point!");
+    }
+    // **End defensive check**
     db[modelName].associate(db);
   }
 });

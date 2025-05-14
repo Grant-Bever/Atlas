@@ -1,10 +1,10 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useHistory } from 'react-router-dom';
 import LoginView from '../components/LoginView';
 import { API_BASE_URL } from '../utils/config';
 
 const ManagerLoginPage = () => {
-  const navigate = useNavigate();
+  const history = useHistory();
 
   const handleLoginSubmit = async (email, password) => {
     try {
@@ -42,7 +42,7 @@ const ManagerLoginPage = () => {
   };
 
   const handleSignUpClick = () => {
-    navigate('/signup');
+    history.push('/signup');
   };
 
   return (

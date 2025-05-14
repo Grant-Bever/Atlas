@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { Employee } = require('../models'); // Import the right model
+const { Employee, Manager } = require('../models'); // Import the right models
 
 // Middleware to authenticate employee requests using JWT
 const authenticateEmployee = async (req, res, next) => {
@@ -52,7 +52,51 @@ const isManager = (req, res, next) => {
     next(); // User is a manager, proceed
 };
 
+// Middleware to authenticate manager requests using JWT
+const authenticateManager = async (req, res, next) => {
+  const token = req.headers.authorization?.split(' ')[1]; // Expect "Bearer TOKEN"
+
+  if (!token) {
+    return res.status(401).json({ message: 'Authentication failed: No token provided.' });
+  }
+
+  try {
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'atlas-dev-secret');
+
+    // Check if the token was intended for a manager
+    if (decoded.role !== 'manager') {
+      return res.status(403).json({ message: 'Forbidden: Access restricted to managers.' });
+    }
+
+    // Find the manager based on the ID in the token payload
+    const manager = await Manager.findByPk(decoded.userId);
+
+    if (!manager) {
+      return res.status(401).json({ message: 'Authentication failed: Manager not found.' });
+    }
+
+    // Attach the authenticated manager object to the request
+    req.manager = manager;
+    // For consistency if other parts of your system use req.user
+    // You might set req.user specific to how managers are represented globally
+    req.user = { id: manager.id, role: 'manager', name: manager.name }; 
+
+    next(); // Proceed
+
+  } catch (error) {
+    console.error('JWT Verification Error (Manager):', error);
+    if (error.name === 'JsonWebTokenError') {
+      return res.status(401).json({ message: 'Authentication failed: Invalid token.' });
+    }
+    if (error.name === 'TokenExpiredError') {
+      return res.status(401).json({ message: 'Authentication failed: Token expired.' });
+    }
+    return res.status(500).json({ message: 'Authentication failed: Server error.' });
+  }
+};
+
 module.exports = {
     authenticateEmployee,
-    isManager
+    isManager,
+    authenticateManager
 }; 

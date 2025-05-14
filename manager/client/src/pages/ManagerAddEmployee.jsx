@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useHistory, useParams } from 'react-router-dom';
 import ManagerLayout from '../components/ManagerLayout';
 import '../styles/FormPage.css'; // Shared form styles
 import '../styles/Modal.css';  // Use existing modal styles
@@ -12,7 +12,7 @@ const API_ENDPOINT = `${API_BASE_URL}/api`;
 // const fetchEmployeeData = (employeeId) => { ... }; // REMOVED
 
 function AddEmployee() {
-  const navigate = useNavigate();
+  const history = useHistory();
   const { employeeId } = useParams(); // Get employeeId from URL
   const isEditing = Boolean(employeeId);
 
@@ -138,7 +138,7 @@ function AddEmployee() {
         if (!isEditing) {
           console.log(`Setup process for ${email} should be initiated.`);
         }
-        navigate('/employees'); // Navigate back to employee list on success
+        history.push('/employees'); // Changed navigate
 
     } catch (err) {
         console.error(`Error saving employee (${method} ${url}):`, err);
@@ -153,7 +153,7 @@ function AddEmployee() {
   };
 
   const handleCancelForm = () => {
-    navigate('/employees');
+    history.push('/employees'); // Changed navigate
   };
 
   // --- Render Logic ---

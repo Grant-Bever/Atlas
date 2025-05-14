@@ -1,49 +1,46 @@
-const { Model } = require('sequelize');
-const bcrypt = require('bcrypt'); // Make sure bcrypt is installed
+const bcrypt = require('bcrypt');
 
 module.exports = (sequelize, DataTypes) => {
-  class Customer extends Model {
-    static associate(models) {
-      Customer.hasMany(models.Invoice, { foreignKey: 'customer_id', as: 'invoices' });
-    }
-
-    // Instance method to validate password
-    async validatePassword(password) {
-      return bcrypt.compare(password, this.password_hash);
-    }
-  }
-  Customer.init({
+  const Customer = sequelize.define('Customer', {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
       allowNull: false
     },
-    name: { // Assuming 'name' is sufficient
+    name: {
       type: DataTypes.STRING(255),
       allowNull: false
     },
     email: {
       type: DataTypes.STRING(255),
-      allowNull: false, // Made non-nullable
-      unique: true,
+      allowNull: true,
       validate: {
         isEmail: true
       }
     },
-    encrypted_phone_number: { // Renamed
+    encrypted_phone_number: {
       type: DataTypes.STRING(255),
-      allowNull: true // Phone is optional
+      allowNull: true
     },
-    password_hash: { // Renamed
+    password_hash: {
       type: DataTypes.STRING(255),
-      allowNull: false // Reverted to NOT NULL
+      allowNull: true
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      defaultValue: DataTypes.NOW
     }
   }, {
-    sequelize,
     modelName: 'Customer',
     tableName: 'customers',
-    timestamps: true, // Enabled timestamps
+    timestamps: true,
     hooks: {
       beforeCreate: async (customer) => {
         if (customer.password_hash) {
@@ -59,5 +56,14 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   });
+
+  Customer.prototype.validatePassword = async function(password) {
+    return bcrypt.compare(password, this.password_hash);
+  };
+
+  Customer.associate = (models) => {
+    Customer.hasMany(models.Invoice, { foreignKey: 'customer_id', as: 'invoices' });
+  };
+
   return Customer;
 }; 

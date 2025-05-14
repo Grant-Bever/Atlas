@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import api from '../../utils/api';
 import './Timesheet.css';
 import moment from 'moment';
@@ -21,8 +20,8 @@ import moment from 'moment';
 //   return [year, month, day].join('-');
 // };
 
-const Timesheet = () => {
-  const { employeeId, hourlyRate, needsRefresh, onDataLoad } = useOutletContext();
+const Timesheet = (props) => {
+  const { employeeId, hourlyRate, needsRefresh, onDataLoad } = props;
 
   const [payPeriod, setPayPeriod] = useState(null);
   const [timesheetEntries, setTimesheetEntries] = useState([]);

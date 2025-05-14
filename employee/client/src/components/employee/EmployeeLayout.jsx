@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import { Redirect } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import TimeTracking from './TimeTracking';
 import './EmployeeLayout.css';
 import api from '../../utils/api'; // Import your api utility
 
-const EmployeeLayout = () => {
-  const { user, isAuthenticated } = useAuth(); // user from AuthContext might just have id, role, name
-  const [employeeProfile, setEmployeeProfile] = useState(null); // Will store { id, name, hourly_rate, ... }
+const EmployeeLayout = (props) => {
+  const { user, isAuthenticated } = useAuth();
+  const [employeeProfile, setEmployeeProfile] = useState(null);
   const [profileLoading, setProfileLoading] = useState(true);
   const [profileError, setProfileError] = useState(null);
   const [timesheetKey, setTimesheetKey] = useState(0);
@@ -18,40 +18,36 @@ const EmployeeLayout = () => {
       setProfileError(null);
       try {
         const response = await api.get('/api/employee-self-service/me/profile');
-        setEmployeeProfile(response.data); // Expecting { id, name, email, phone, hourly_rate }
+        setEmployeeProfile(response.data);
       } catch (err) {
         console.error('EmployeeLayout: Failed to fetch employee profile:', err);
         setProfileError(`Failed to load employee details: ${err.response?.data?.message || err.message}`);
-        setEmployeeProfile(null); // Clear profile on error
+        setEmployeeProfile(null);
       }
       setProfileLoading(false);
     };
 
     if (isAuthenticated && user && user.id) {
-        // If user from AuthContext has hourly_rate, use it directly (optional optimization)
         if (typeof user.hourly_rate !== 'undefined') {
             setEmployeeProfile({
                 id: user.id,
                 name: user.name,
                 hourly_rate: user.hourly_rate,
-                // ...any other fields from AuthContext user that are part of profile
             });
             setProfileLoading(false);
         } else {
-            // Otherwise, fetch the full profile from the dedicated endpoint
             fetchEmployeeProfile(user.id);
         }
     } else if (isAuthenticated && !user) {
-        // Authenticated but user object not yet populated in context, wait for AuthContext update
         setProfileLoading(true); 
     } else if (!isAuthenticated) {
-        setProfileLoading(false); // Not authenticated, no profile to load
+        setProfileLoading(false);
         setEmployeeProfile(null);
     }
   }, [user, isAuthenticated]);
 
   if (!isAuthenticated || (isAuthenticated && user?.role !== 'employee')) {
-    return <Navigate to="/login" replace />;
+    return <Redirect to="/login" />;
   }
 
   const handleClockAction = () => {
@@ -66,11 +62,21 @@ const EmployeeLayout = () => {
     return <div className="error-message" style={{padding: '20px'}}>Error loading employee data: {profileError}</div>;
   }
 
-  // After loading, check if we actually got the profile and hourly_rate
   if (!employeeProfile || typeof employeeProfile.hourly_rate === 'undefined') {
     console.warn('EmployeeLayout: Employee profile loaded but hourly_rate is still missing.');
     return <div>Employee data is incomplete (missing hourly rate). Please contact support.</div>;
   }
+
+  const childrenWithProps = React.Children.map(props.children, child => {
+    if (React.isValidElement(child)) {
+      return React.cloneElement(child, { 
+        employeeId: employeeProfile.id, 
+        hourlyRate: employeeProfile.hourly_rate, 
+        needsRefresh: timesheetKey 
+      });
+    }
+    return child;
+  });
 
   return (
     <div className="employee-layout">
@@ -85,7 +91,7 @@ const EmployeeLayout = () => {
         />
       </nav>
       <main className="employee-content">
-         <Outlet context={{ employeeId: employeeProfile.id, hourlyRate: employeeProfile.hourly_rate, needsRefresh: timesheetKey }} />
+         {childrenWithProps}
       </main>
     </div>
   );
@@ -93,9 +99,6 @@ const EmployeeLayout = () => {
 
 export default EmployeeLayout;
 
-// And in your Timesheet.jsx, you would use useOutletContext:
-// import { useOutletContext } from 'react-router-dom';
-// const Timesheet = () => {
-//   const { employeeId, hourlyRate, needsRefresh } = useOutletContext();
-//   ... rest of your Timesheet component ...
-// }; 
+// Note: Child components (Timesheet, EmployeeOrders, etc.) will now receive these as direct props
+// e.g., const Timesheet = (props) => { const { employeeId, hourlyRate, needsRefresh } = props; ... }
+// instead of using useOutletContext(). 

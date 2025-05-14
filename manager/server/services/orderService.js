@@ -1,6 +1,7 @@
 const db = require('../models'); // Imports index.js which initializes Sequelize and models
 const { Invoice, InvoiceItem, Customer } = db;
 const { Op } = require('sequelize'); // Import Operators
+const { encryptData } = require('../utils/securityUtils'); // Added import
 
 /**
  * Creates a new invoice along with its items.
@@ -9,8 +10,9 @@ const { Op } = require('sequelize'); // Import Operators
  * @returns {Promise<object>} The created invoice object with items.
  */
 const createInvoice = async (invoiceData) => {
+  console.log('<<<<< RUNNING orderService.createInvoice - VERSION 2 (with encrypted_phone_number) >>>>>');
   // Destructure customerName and customerPhone
-  const { customerName, customerPhone, date, total, checked_out = false, paid = false, completed = false, items = [] } = invoiceData;
+  const { customerName, customerPhone, date, total, checked_out = false, paid = false, completed = false, items = [], customerEmail } = invoiceData; // Added customerEmail
 
   // Basic validation
   if (!customerName || !customerPhone || !date || total === undefined || !Array.isArray(items)) {
@@ -22,29 +24,39 @@ const createInvoice = async (invoiceData) => {
 
   try {
     // --- Find or Create Customer ---
-    // Find based on phone number, create with name/phone if not found.
+    const trimmedPhone = customerPhone.trim();
+    const encryptedPhone = trimmedPhone ? encryptData(trimmedPhone) : null;
+
+    // Prepare a placeholder email if not provided and a new customer might be created.
+    // This is a temporary workaround for the NOT NULL constraint on Customer.email.
+    // Consider making email optional in the Customer model or collecting it in the invoice form.
+    const placeholderEmail = customerEmail || `${customerName.trim().replace(/\s+/g, '.').toLowerCase()}.${Date.now()}@placeholder.atlas.com`;
+
     const [customer, created] = await Customer.findOrCreate({
       where: { 
-        // Find using phone number (assuming phone is unique or reliable enough)
-        phone: customerPhone.trim() 
+        // Attempt to find by encrypted phone number.
+        // This relies on encryptData using a consistent IV for the same input.
+        encrypted_phone_number: encryptedPhone 
       },
-      defaults: { // Fields to use ONLY if the customer needs to be created
-        name: customerName.trim(), // Use name from input for new customer
-        phone: customerPhone.trim(),
-        email: null, // Default other fields
-        password: null 
+      defaults: { 
+        name: customerName.trim(),
+        encrypted_phone_number: encryptedPhone,
+        // Provide a placeholder email or use the one from invoiceData if available
+        // Customer model requires email, and it must be unique.
+        email: placeholderEmail, 
+        password_hash: '__TEMP_PASS_FOR_INVOICE_CUSTOMER__' // Changed from null to a placeholder string
       },
-      transaction // Ensure findOrCreate is part of the transaction
+      transaction
     });
 
     if (created) {
-        console.log(`Created new customer: ${customer.name} with phone ${customer.phone} (ID: ${customer.id})`);
+        console.log(`Created new customer: ${customer.name} with encrypted phone (ID: ${customer.id})`);
     } else {
-        console.log(`Found existing customer by phone ${customer.phone}: ${customer.name} (ID: ${customer.id})`);
-        // **IMPORTANT**: Do NOT update the existing customer's name here based on checkout input.
-        // If the name provided in checkout (customerName) is different from customer.name,
-        // that information is relevant to *this order* but shouldn't change the Customer record itself.
-        // If you need to update customer profiles, that should be a separate feature/endpoint.
+        console.log(`Found existing customer by encrypted phone: ${customer.name} (ID: ${customer.id})`);
+        // If customer was found, but name is different, do not update customer's name from invoice data.
+        // If email was different, we might have an issue if the placeholder was used and this customer already existed.
+        // This scenario needs careful consideration if a customer is found by phone but has a different name/email.
+        // For now, we proceed with the found customer.
     }
 
     customer_id = customer.id;
